@@ -67,7 +67,7 @@
       "default": 3,
       "description": "Signature's maximum validation duration in seconds",
       "type": "integer",
-      "minimum": "1",
+      "minimum": 1,
       "x-schema-form": {
         "hidden": [
           {
