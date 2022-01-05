@@ -26,12 +26,12 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.gravitee.common.http.HttpHeaders;
 import io.gravitee.common.http.HttpMethod;
 import io.gravitee.el.TemplateEngine;
 import io.gravitee.gateway.api.ExecutionContext;
 import io.gravitee.gateway.api.Request;
 import io.gravitee.gateway.api.Response;
+import io.gravitee.gateway.api.http.HttpHeaders;
 import io.gravitee.policy.api.PolicyChain;
 import io.gravitee.policy.generatehttpsignature.configuration.Algorithm;
 import io.gravitee.policy.generatehttpsignature.configuration.GenerateHttpSignaturePolicyConfiguration;
@@ -40,6 +40,7 @@ import io.gravitee.reporter.api.http.Metrics;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -169,7 +170,7 @@ class GenerateHttpSignaturePolicyTest {
     public void shouldSetSignatureHeader(String httpSignatureScheme, String expectedHeaderKey, String expectedHeaderValue) {
         final Signature signature = mock(Signature.class);
         final Request request = mock(Request.class);
-        final HttpHeaders httpHeaders = new HttpHeaders();
+        final HttpHeaders httpHeaders = HttpHeaders.create();
 
         when(request.headers()).thenReturn(httpHeaders);
         when(signature.toString()).thenReturn("Signature signatureContent");
@@ -177,9 +178,9 @@ class GenerateHttpSignaturePolicyTest {
 
         cut.setSignatureHeader(request, signature);
 
-        assertThat(request.headers()).containsKey(expectedHeaderKey);
-        assertThat(request.headers().get(expectedHeaderKey)).hasSize(1);
-        assertThat(request.headers().get(expectedHeaderKey).get(0)).isEqualTo(expectedHeaderValue);
+        Assertions.assertTrue(request.headers().contains(expectedHeaderKey));
+        assertThat(request.headers().getAll(expectedHeaderKey)).hasSize(1);
+        assertThat(request.headers().get(expectedHeaderKey)).isEqualTo(expectedHeaderValue);
     }
 
     /**
@@ -201,7 +202,7 @@ class GenerateHttpSignaturePolicyTest {
     }
 
     private HttpHeaders buildHttpHeadersFromList(List<String> requestHeaders) {
-        final HttpHeaders httpHeaders = new HttpHeaders();
+        final HttpHeaders httpHeaders = HttpHeaders.create();
         requestHeaders.forEach(header -> httpHeaders.set(header, ""));
         return httpHeaders;
     }

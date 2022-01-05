@@ -17,10 +17,11 @@ package io.gravitee.policy.generatehttpsignature;
 
 import static org.springframework.util.CollectionUtils.isEmpty;
 
-import io.gravitee.common.http.HttpHeaders;
 import io.gravitee.gateway.api.ExecutionContext;
 import io.gravitee.gateway.api.Request;
 import io.gravitee.gateway.api.Response;
+import io.gravitee.gateway.api.http.HttpHeaderNames;
+import io.gravitee.gateway.api.http.HttpHeaders;
 import io.gravitee.policy.api.PolicyChain;
 import io.gravitee.policy.api.PolicyResult;
 import io.gravitee.policy.api.annotations.OnRequest;
@@ -56,7 +57,7 @@ public class GenerateHttpSignaturePolicy {
 
     @OnRequest
     public void onRequest(Request request, Response response, ExecutionContext context, PolicyChain chain) {
-        HttpHeaders requestHeaders = new HttpHeaders(request.headers());
+        HttpHeaders requestHeaders = HttpHeaders.create(request.headers());
         List<String> configuredHeaders = new ArrayList<>(configuration.getHeaders());
 
         final String checkHeadersErrorMessage = checkHeaders(requestHeaders, configuredHeaders);
@@ -105,7 +106,7 @@ public class GenerateHttpSignaturePolicy {
         if (!isEmpty(configuredHeaders)) {
             if (!headers.containsAllKeys(configuredHeaders)) {
                 final ArrayList<String> missingHeaders = new ArrayList<>(configuredHeaders);
-                missingHeaders.removeAll(headers.keySet());
+                missingHeaders.removeAll(headers.names());
 
                 return String.format(
                     "%s those headers are missing %s",
@@ -113,7 +114,7 @@ public class GenerateHttpSignaturePolicy {
                     missingHeaders.stream().collect(Collectors.joining(", ", "[", "]"))
                 );
             }
-        } else if (!headers.containsKey(HttpHeaders.DATE)) {
+        } else if (!headers.contains(HttpHeaderNames.DATE)) {
             return String.format("%s 'Date' header is missing", ERROR_MESSAGE);
         }
 
@@ -165,7 +166,7 @@ public class GenerateHttpSignaturePolicy {
             request.headers().set("Signature", substring);
         } else {
             // https://tools.ietf.org/id/draft-cavage-http-signatures-12.html#rfc.section.3.1
-            request.headers().set(HttpHeaders.AUTHORIZATION, signature.toString());
+            request.headers().set(HttpHeaderNames.AUTHORIZATION, signature.toString());
         }
     }
 }
