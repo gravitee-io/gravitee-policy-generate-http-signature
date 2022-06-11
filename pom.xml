@@ -37,7 +37,7 @@
         <gravitee-bom.version>1.4</gravitee-bom.version>
         <gravitee-gateway-api.version>1.31.0</gravitee-gateway-api.version>
         <gravitee-policy-api.version>1.9.0</gravitee-policy-api.version>
-        <gravitee-common.version>1.22.0</gravitee-common.version>
+        <gravitee-common.version>1.27.0</gravitee-common.version>
         <maven-assembly-plugin.version>2.5.5</maven-assembly-plugin.version>
         <tomitribe-http-signatures.version>1.8-SNAPSHOT</tomitribe-http-signatures.version>
         <!-- Property used by the publication job in CI-->
