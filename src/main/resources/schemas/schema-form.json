@@ -1,10 +1,11 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
-  "id": "urn:jsonschema:io:gravitee:policy:generatehttpsignature:configuration:GenerateHttpSignaturePolicyConfiguration",
+  "additionalProperties": false,
   "properties": {
     "scheme" : {
       "title": "Scheme",
-      "description": "Signature Scheme",
+      "description": "Signature Scheme.",
       "type" : "string",
       "default": "AUTHORIZATION",
       "enum" : [
@@ -16,6 +17,12 @@
         "titleMap": {
           "AUTHORIZATION": "\"Signature\" HTTP Authentication Scheme",
           "SIGNATURE": "\"Signature\" HTTP Header"
+        }
+      },
+      "gioConfig": {
+        "banner": {
+          "title": "Signature Scheme.",
+          "text": "<ul><li>AUTHORIZATION: \"Signature\" HTTP Authentication Scheme</li><li>SIGNATURE: \"Signature\" HTTP Header</li></ul>"
         }
       }
     },
@@ -65,7 +72,7 @@
     "validityDuration": {
       "title": "Validity duration",
       "default": 3,
-      "description": "Signature's maximum validation duration in seconds",
+      "description": "Signature's maximum validation duration in seconds.",
       "type": "integer",
       "minimum": 1,
       "x-schema-form": {
@@ -76,6 +83,12 @@
             }
           }
         ]
+      },
+      "gioConfig": {
+        "banner": {
+          "title": "Validity duration",
+          "text": "Signature's maximum validation duration in seconds. (Used only if the expires header is included in the signature.)"
+        }
       }
     }
   },
