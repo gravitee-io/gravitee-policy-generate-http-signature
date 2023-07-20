@@ -35,6 +35,14 @@ You can use:
 
 NOTE: Current version of the policy does not support *Digest*, *(request-target)*, *Host* and *Path* header.
 
+== Compatibility with APIM
+
+|===
+| Plugin version | APIM version
+
+| Up to 1.x                   | All
+|===
+
 == Configuration
 
 |===
