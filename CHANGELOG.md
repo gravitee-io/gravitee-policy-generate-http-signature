@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/gravitee-io/gravitee-policy-generate-http-signature/compare/1.2.0...1.2.1) (2023-07-20)
+
+
+### Bug Fixes
+
+* update policy description ([38535ea](https://github.com/gravitee-io/gravitee-policy-generate-http-signature/commit/38535ea45ced55d74ce0789e5a90bfd25f68d97b))
+
 # [1.2.0](https://github.com/gravitee-io/gravitee-policy-generate-http-signature/compare/1.1.0...1.2.0) (2023-07-05)
 
 
