@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/gravitee-io/gravitee-policy-generate-http-signature/compare/1.2.1...1.3.0) (2023-12-19)
+
+
+### Features
+
+* enable policy on REQUEST phase for message APIs ([220bdf8](https://github.com/gravitee-io/gravitee-policy-generate-http-signature/commit/220bdf834a1fdf12a694cecba0beb67589174c43)), closes [gravitee-io/issues#9430](https://github.com/gravitee-io/issues/issues/9430)
+
 ## [1.2.1](https://github.com/gravitee-io/gravitee-policy-generate-http-signature/compare/1.2.0...1.2.1) (2023-07-20)
 
 
