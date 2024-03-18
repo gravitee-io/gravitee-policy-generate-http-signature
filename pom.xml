@@ -38,7 +38,7 @@
         <gravitee-gateway-api.version>1.31.0</gravitee-gateway-api.version>
         <gravitee-policy-api.version>1.11.0</gravitee-policy-api.version>
         <gravitee-common.version>1.28.0</gravitee-common.version>
-        <maven-assembly-plugin.version>3.7.0</maven-assembly-plugin.version>
+        <maven-assembly-plugin.version>3.7.1</maven-assembly-plugin.version>
         <tomitribe-http-signatures.version>1.8-SNAPSHOT</tomitribe-http-signatures.version>
         <!-- Property used by the publication job in CI-->
         <publish-folder-path>graviteeio-apim/plugins/policies</publish-folder-path>
