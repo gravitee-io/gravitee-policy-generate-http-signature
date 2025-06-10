@@ -1,11 +1,11 @@
-/**
- * Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+/*
+ * Copyright © 2015 The Gravitee team (http://gravitee.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *         http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -128,7 +128,7 @@ public class GenerateHttpSignaturePolicy {
      * @return the signature
      */
     Signature buildSignatureFromConfiguration(ExecutionContext context, Request request, List<String> configuredHeaders) {
-        final String keyId = context.getTemplateEngine().getValue(configuration.getKeyId(), String.class);
+        final String keyId = context.getTemplateEngine().evalNow(configuration.getKeyId(), String.class);
         return new Signature(
             keyId,
             null,
@@ -149,7 +149,7 @@ public class GenerateHttpSignaturePolicy {
      * @return the signer able to create the signature with provided secret and algorithm
      */
     Signer buildSigner(ExecutionContext context, Signature signature) {
-        String secret = context.getTemplateEngine().getValue(configuration.getSecret(), String.class);
+        String secret = context.getTemplateEngine().evalNow(configuration.getSecret(), String.class);
         final Key key = new SecretKeySpec(secret.getBytes(), signature.getAlgorithm().getJvmName());
         return new Signer(key, signature);
     }

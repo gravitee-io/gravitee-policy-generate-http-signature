@@ -1,0 +1,47 @@
+{
+    "id": "my-api-generate-http-authorization",
+    "name": "my-api",
+    "gravitee": "2.0.0",
+    "proxy": {
+        "context_path": "/generate-authorization",
+        "endpoints": [
+            {
+                "name": "default",
+                "target": "http://localhost:8080/endpoint",
+                "http": {
+                    "connectTimeout": 2000,
+                    "readTimeout": 60000
+                }
+            }
+        ]
+    },
+    "flows": [
+        {
+            "name": "flow-1",
+            "methods": ["GET"],
+            "enabled": true,
+            "path-operator": {
+                "path": "/",
+                "operator": "STARTS_WITH"
+            },
+            "pre": [
+                {
+                    "name": "Generate HTTP Signature",
+                    "description": "",
+                    "enabled": true,
+                    "policy": "generate-http-signature",
+                    "configuration": {
+                        "scheme": "AUTHORIZATION",
+                        "algorithm": "HMAC_SHA256",
+                        "created": true,
+                        "expires": true,
+                        "validityDuration": 2,
+                        "secret": "secret",
+                        "keyId": "keyId"
+                    }
+                }
+            ],
+            "post": []
+        }
+    ]
+}

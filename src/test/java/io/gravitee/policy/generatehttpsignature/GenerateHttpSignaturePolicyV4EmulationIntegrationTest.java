@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.gravitee.policy.generatehttpsignature.configuration;
+package io.gravitee.policy.generatehttpsignature;
 
-/**
- * @author Yann TAVERNIER (yann.tavernier at graviteesource.com)
- * @author GraviteeSource Team
- */
-public enum HttpSignatureScheme {
-    AUTHORIZATION,
-    SIGNATURE,
-}
+import io.gravitee.apim.gateway.tests.sdk.annotations.GatewayTest;
+import io.gravitee.definition.model.ExecutionMode;
+import org.junit.jupiter.api.DisplayNameGeneration;
+import org.junit.jupiter.api.DisplayNameGenerator;
+
+@GatewayTest(v2ExecutionMode = ExecutionMode.V4_EMULATION_ENGINE)
+@DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
+class GenerateHttpSignaturePolicyV4EmulationIntegrationTest extends GenerateHttpSignaturePolicyV3IntegrationTest {}

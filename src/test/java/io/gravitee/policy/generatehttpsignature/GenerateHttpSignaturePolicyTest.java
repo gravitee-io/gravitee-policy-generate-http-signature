@@ -1,11 +1,11 @@
-/**
- * Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+/*
+ * Copyright © 2015 The Gravitee team (http://gravitee.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *         http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -63,13 +63,13 @@ class GenerateHttpSignaturePolicyTest {
     private GenerateHttpSignaturePolicyConfiguration configuration;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         cut = new GenerateHttpSignaturePolicy(configuration);
     }
 
     @Test
     @DisplayName("Should make policy chain fail because of invalid headers")
-    public void shouldFailChain_invalidHeaders() {
+    void shouldFailChain_invalidHeaders() {
         final Request request = mock(Request.class);
         final Response response = mock(Response.class);
         final ExecutionContext executionContext = mock(ExecutionContext.class);
@@ -85,7 +85,7 @@ class GenerateHttpSignaturePolicyTest {
 
     @Test
     @DisplayName("Should make policy chain fail because of an exception during signing process")
-    public void shouldFail_unableToSign() throws IOException {
+    void shouldFail_unableToSign() throws IOException {
         final Request request = mock(Request.class);
         final Response response = mock(Response.class);
         final ExecutionContext context = mock(ExecutionContext.class);
@@ -111,7 +111,7 @@ class GenerateHttpSignaturePolicyTest {
         when(request.method()).thenReturn(HttpMethod.GET);
         when(request.path()).thenReturn("/my/api");
         when(context.getTemplateEngine()).thenReturn(templateEngine);
-        when(templateEngine.getValue(eq("keyId"), any())).thenReturn("keyId");
+        when(templateEngine.evalNow(eq("keyId"), any())).thenReturn("keyId");
 
         spy.onRequest(request, response, context, chain);
 
@@ -141,8 +141,8 @@ class GenerateHttpSignaturePolicyTest {
         when(request.method()).thenReturn(HttpMethod.GET);
         when(request.path()).thenReturn("/my/api");
         when(context.getTemplateEngine()).thenReturn(templateEngine);
-        when(templateEngine.getValue(eq("keyId"), any())).thenReturn("keyId");
-        when(templateEngine.getValue(eq("secret"), any())).thenReturn("keyId");
+        when(templateEngine.evalNow(eq("keyId"), any())).thenReturn("keyId");
+        when(templateEngine.evalNow(eq("secret"), any())).thenReturn("keyId");
 
         cut.onRequest(request, response, context, chain);
 
@@ -152,7 +152,7 @@ class GenerateHttpSignaturePolicyTest {
     @ParameterizedTest
     @MethodSource("provideCheckConfigureHeadersData")
     @DisplayName("Should check if the request's header are valid regarding policy's configuration and Signature minimal requirements")
-    public void shouldCheckConfiguredHeaders(List<String> requestHeaders, List<String> configuredHeaders, String errorMessage) {
+    void shouldCheckConfiguredHeaders(List<String> requestHeaders, List<String> configuredHeaders, String errorMessage) {
         final HttpHeaders httpHeaders = buildHttpHeadersFromList(requestHeaders);
 
         final String result = cut.checkHeaders(httpHeaders, configuredHeaders);
@@ -167,7 +167,7 @@ class GenerateHttpSignaturePolicyTest {
     @ParameterizedTest
     @CsvSource(value = { "AUTHORIZATION,Authorization,Signature signatureContent", "SIGNATURE,Signature,signatureContent" })
     @DisplayName("Should add the correct header to request depending on HTTP Signature Scheme configuration")
-    public void shouldSetSignatureHeader(String httpSignatureScheme, String expectedHeaderKey, String expectedHeaderValue) {
+    void shouldSetSignatureHeader(String httpSignatureScheme, String expectedHeaderKey, String expectedHeaderValue) {
         final Signature signature = mock(Signature.class);
         final Request request = mock(Request.class);
         final HttpHeaders httpHeaders = HttpHeaders.create();
