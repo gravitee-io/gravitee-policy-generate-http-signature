@@ -1,102 +1,88 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-    "scheme" : {
-      "title": "Scheme",
-      "description": "Signature Scheme.",
-      "type" : "string",
-      "default": "AUTHORIZATION",
-      "enum" : [
-        "AUTHORIZATION",
-        "SIGNATURE"
-      ],
-      "x-schema-form": {
-        "type": "select",
-        "titleMap": {
-          "AUTHORIZATION": "\"Signature\" HTTP Authentication Scheme",
-          "SIGNATURE": "\"Signature\" HTTP Header"
-        }
-      },
-      "gioConfig": {
-        "banner": {
-          "title": "Signature Scheme.",
-          "text": "<ul><li>AUTHORIZATION: \"Signature\" HTTP Authentication Scheme</li><li>SIGNATURE: \"Signature\" HTTP Header</li></ul>"
-        }
-      }
-    },
-    "keyId": {
-      "title": "Key ID",
-      "description": "The key ID used to sign (support EL).",
-      "type": "string"
-    },
-    "secret": {
-      "title": "Secret",
-      "description": "The secret key used to sign (support EL).",
-      "type": "string"
-    },
-    "algorithm" : {
-      "title": "Algorithm",
-      "description": "The HMAC digest algorithm.",
-      "type" : "string",
-      "default": "HMAC_SHA256",
-      "enum" : [
-        "HMAC_SHA1",
-        "HMAC_SHA256",
-        "HMAC_SHA384",
-        "HMAC_SHA512"
-      ]
-    },
-    "headers" : {
-      "type": "array",
-      "title": "Headers",
-      "description": "List of headers to use for HTTP signature creation.",
-      "items": {
-        "type": "string",
-        "title": "Header"
-      }
-    },
-    "created": {
-      "title": "Include the created timestamp in the signature",
-      "default": true,
-      "description": "Add (created) header in the signature. (Highly recommended)",
-      "type": "boolean"
-    },
-    "expires": {
-      "title": "Include the expires timestamp in the signature",
-      "default": true,
-      "description": "Add (expires) header in the signature. (Highly recommended)",
-      "type": "boolean"
-    },
-    "validityDuration": {
-      "title": "Validity duration",
-      "default": 3,
-      "description": "Signature's maximum validation duration in seconds.",
-      "type": "integer",
-      "minimum": 1,
-      "x-schema-form": {
-        "hidden": [
-          {
-            "$eq": {
-              "expires": false
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "scheme": {
+            "title": "Scheme",
+            "description": "Signature Scheme.",
+            "type": "string",
+            "default": "AUTHORIZATION",
+            "enum": ["AUTHORIZATION", "SIGNATURE"],
+            "x-schema-form": {
+                "type": "select",
+                "titleMap": {
+                    "AUTHORIZATION": "\"Signature\" HTTP Authentication Scheme",
+                    "SIGNATURE": "\"Signature\" HTTP Header"
+                }
+            },
+            "gioConfig": {
+                "banner": {
+                    "title": "Signature Scheme.",
+                    "text": "<ul><li>AUTHORIZATION: \"Signature\" HTTP Authentication Scheme</li><li>SIGNATURE: \"Signature\" HTTP Header</li></ul>"
+                }
             }
-          }
-        ]
-      },
-      "gioConfig": {
-        "banner": {
-          "title": "Validity duration",
-          "text": "Signature's maximum validation duration in seconds. (Used only if the expires header is included in the signature.)"
+        },
+        "keyId": {
+            "title": "Key ID",
+            "description": "The key ID used to sign (support EL).",
+            "type": "string"
+        },
+        "secret": {
+            "title": "Secret",
+            "description": "The secret key used to sign (support EL).",
+            "type": "string"
+        },
+        "algorithm": {
+            "title": "Algorithm",
+            "description": "The HMAC digest algorithm.",
+            "type": "string",
+            "default": "HMAC_SHA256",
+            "enum": ["HMAC_SHA1", "HMAC_SHA256", "HMAC_SHA384", "HMAC_SHA512"]
+        },
+        "headers": {
+            "type": "array",
+            "title": "Headers",
+            "description": "List of headers to use for HTTP signature creation.",
+            "items": {
+                "type": "string",
+                "title": "Header"
+            }
+        },
+        "created": {
+            "title": "Include the created timestamp in the signature",
+            "default": true,
+            "description": "Add (created) header in the signature. (Highly recommended)",
+            "type": "boolean"
+        },
+        "expires": {
+            "title": "Include the expires timestamp in the signature",
+            "default": true,
+            "description": "Add (expires) header in the signature. (Highly recommended)",
+            "type": "boolean"
+        },
+        "validityDuration": {
+            "title": "Validity duration",
+            "default": 3,
+            "description": "Signature's maximum validation duration in seconds.",
+            "type": "integer",
+            "minimum": 1,
+            "x-schema-form": {
+                "hidden": [
+                    {
+                        "$eq": {
+                            "expires": false
+                        }
+                    }
+                ]
+            },
+            "gioConfig": {
+                "banner": {
+                    "title": "Validity duration",
+                    "text": "Signature's maximum validation duration in seconds. (Used only if the expires header is included in the signature.)"
+                }
+            }
         }
-      }
-    }
-  },
-  "required": [
-    "scheme",
-    "secret",
-    "keyId",
-    "validityDuration",
-    "algorithm"
-  ]
+    },
+    "required": ["scheme", "secret", "keyId", "validityDuration", "algorithm"]
 }
