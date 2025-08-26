@@ -26,12 +26,18 @@
         "keyId": {
             "title": "Key ID",
             "description": "The key ID used to sign (support EL).",
-            "type": "string"
+            "type": "string",
+            "gioConfig": {
+                "el": true
+            }
         },
         "secret": {
             "title": "Secret",
             "description": "The secret key used to sign (support EL).",
-            "type": "string"
+            "type": "string",
+            "gioConfig": {
+                "el": true
+            }
         },
         "algorithm": {
             "title": "Algorithm",
