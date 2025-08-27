@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/gravitee-io/gravitee-policy-generate-http-signature/compare/1.3.0...1.4.0) (2025-08-27)
+
+
+### Features
+
+* update form to provide el metadata ([62af3dc](https://github.com/gravitee-io/gravitee-policy-generate-http-signature/commit/62af3dc4755fcb56cc1ce88da3e03db6c31938ad))
+
 # [1.3.0](https://github.com/gravitee-io/gravitee-policy-generate-http-signature/compare/1.2.1...1.3.0) (2023-12-19)
 
 
