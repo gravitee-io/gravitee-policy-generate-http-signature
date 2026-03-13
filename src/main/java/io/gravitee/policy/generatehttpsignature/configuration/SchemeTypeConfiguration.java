@@ -15,15 +15,25 @@
  */
 package io.gravitee.policy.generatehttpsignature.configuration;
 
-import lombok.Getter;
+import java.util.ArrayList;
+import java.util.List;
+import lombok.*;
 
 /**
- * @author Yann TAVERNIER (yann.tavernier at graviteesource.com)
+ * @author Brent HUNTER (brent.hunter at graviteesource.com)
  * @author GraviteeSource Team
  */
 @Getter
-public enum HttpSignatureScheme {
-    AUTHORIZATION,
-    SIGNATURE,
-    CUSTOM_HEADER,
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class SchemeTypeConfiguration {
+
+    private boolean enabled;
+
+    // Optional - List of additional headers to add to the Webhook signature creation
+    private String headersDelimiter;
+
+    private List<String> headers = new ArrayList<>();
 }

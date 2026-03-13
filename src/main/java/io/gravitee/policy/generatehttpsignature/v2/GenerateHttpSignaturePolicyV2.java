@@ -1,0 +1,191 @@
+/*
+ * Copyright © 2015 The Gravitee team (http://gravitee.io)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.gravitee.policy.generatehttpsignature.v2;
+
+import static org.springframework.util.CollectionUtils.isEmpty;
+
+import io.gravitee.gateway.api.ExecutionContext;
+import io.gravitee.gateway.api.Request;
+import io.gravitee.gateway.api.Response;
+import io.gravitee.gateway.api.http.HttpHeaderNames;
+import io.gravitee.gateway.api.http.HttpHeaders;
+import io.gravitee.policy.api.PolicyChain;
+import io.gravitee.policy.api.PolicyResult;
+import io.gravitee.policy.api.annotations.OnRequest;
+import io.gravitee.policy.generatehttpsignature.configuration.GenerateHttpSignaturePolicyConfiguration;
+import io.gravitee.policy.generatehttpsignature.configuration.HttpSignatureScheme;
+import java.io.IOException;
+import java.security.Key;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import javax.crypto.spec.SecretKeySpec;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tomitribe.auth.signatures.Signature;
+import org.tomitribe.auth.signatures.Signer;
+
+/**
+ * @author Yann TAVERNIER (yann.tavernier at graviteesource.com)
+ * @author GraviteeSource Team
+ */
+public class GenerateHttpSignaturePolicyV2 {
+
+    private static final Logger logger = LoggerFactory.getLogger(GenerateHttpSignaturePolicyV2.class);
+
+    protected static final String HTTP_SIGNATURE_IMPOSSIBLE_GENERATION = "HTTP_SIGNATURE_IMPOSSIBLE_GENERATION";
+    protected static final String HTTP_SIGNATURE_ADDITIONAL_HEADERS_NOT_VALID = "HTTP_SIGNATURE_ADDITIONAL_HEADERS_NOT_VALID";
+    protected static final String ERROR_MESSAGE = "Unable to generate HTTP Signature:";
+
+    protected final GenerateHttpSignaturePolicyConfiguration configuration;
+
+    public GenerateHttpSignaturePolicyV2(GenerateHttpSignaturePolicyConfiguration configuration) {
+        this.configuration = configuration;
+    }
+
+    @OnRequest
+    public void onRequest(Request request, Response response, ExecutionContext context, PolicyChain chain) {
+        HttpHeaders requestHeaders = HttpHeaders.create(request.headers());
+        List<String> configuredHeaders = new ArrayList<>(Optional.ofNullable(configuration.headers()).orElseGet(List::of));
+
+        final String checkHeadersErrorMessage = checkHeaders(requestHeaders, configuredHeaders);
+        if (checkHeadersErrorMessage != null) {
+            logger.warn(checkHeadersErrorMessage);
+            chain.failWith(PolicyResult.failure(HTTP_SIGNATURE_IMPOSSIBLE_GENERATION, 400, checkHeadersErrorMessage));
+            return;
+        }
+
+        if (configuration.created()) {
+            configuredHeaders.add("(created)");
+        }
+
+        if (configuration.expires()) {
+            configuredHeaders.add("(expires)");
+        }
+
+        final Signature signatureFromConfiguration = buildSignatureFromConfiguration(
+            () -> context.getTemplateEngine().evalNow(configuration.keyId(), String.class),
+            configuredHeaders,
+            request::timestamp,
+            configuration.signHeaders()
+        );
+
+        final Signer signer = buildSigner(signatureFromConfiguration, () -> getSecret(context));
+        final Signature signature;
+
+        try {
+            signature = signer.sign(request.method().name().toLowerCase(), request.path(), requestHeaders.toSingleValueMap(), null);
+        } catch (IOException e) {
+            final String errorMessage = String.format("%s %s", ERROR_MESSAGE, e.getMessage());
+            logger.warn(errorMessage);
+            request.metrics().setMessage(e.getMessage());
+            chain.failWith(PolicyResult.failure(HTTP_SIGNATURE_IMPOSSIBLE_GENERATION, 400, errorMessage));
+            return;
+        }
+
+        setSignatureHeader(request, signature);
+
+        chain.doNext(request, response);
+    }
+
+    /**
+     * Validate the request by verifying it has the headers mentioned in policy's configuration.
+     *
+     * @param headers           the incoming request's headers.
+     * @param configuredHeaders the headers from policy's configuration.
+     * @return the error message if headers are not valid, null if it's ok
+     *
+     */
+    protected String checkHeaders(HttpHeaders headers, List<String> configuredHeaders) {
+        if (!isEmpty(configuredHeaders)) {
+            if (!headers.containsAllKeys(configuredHeaders)) {
+                final ArrayList<String> missingHeaders = new ArrayList<>(configuredHeaders);
+                missingHeaders.removeAll(headers.names());
+
+                return String.format(
+                    "%s those headers are missing %s",
+                    ERROR_MESSAGE,
+                    missingHeaders.stream().collect(Collectors.joining(", ", "[", "]"))
+                );
+            }
+        } else if (!headers.contains(HttpHeaderNames.DATE)) {
+            return String.format("%s 'Date' header is missing", ERROR_MESSAGE);
+        }
+
+        return null;
+    }
+
+    /**
+     * Build signature from policy configuration.
+     *
+     * @param configuredHeaders the headers to add to signature
+     * @return the signature
+     */
+    protected Signature buildSignatureFromConfiguration(
+        Supplier<String> keySupplier,
+        List<String> configuredHeaders,
+        Supplier<Long> timestampSupplier,
+        boolean signHeaders
+    ) {
+        return new Signature(
+            keySupplier.get(),
+            null,
+            configuration.algorithm().getAlg(),
+            null,
+            null,
+            configuredHeaders,
+            configuredHeaders.contains("(expires)") ? configuration.validityDuration() * 1000 : null,
+            configuredHeaders.contains("(created)") ? timestampSupplier.get() : null,
+            null,
+            signHeaders
+        );
+    }
+
+    /**
+     * Build a signer based on the configured signature and the secret from policy configuration.
+     *
+     * @param signature the formerly created signature from configuration
+     * @return the signer able to create the signature with provided secret and algorithm
+     */
+    protected Signer buildSigner(Signature signature, Supplier<String> secretSupplier) {
+        String secret = secretSupplier.get();
+        final Key key = new SecretKeySpec(secret.getBytes(), signature.getAlgorithm().getJvmName());
+        return new Signer(key, signature);
+    }
+
+    private String getSecret(ExecutionContext context) {
+        return context.getTemplateEngine().evalNow(configuration.secret(), String.class);
+    }
+
+    /**
+     * Add the HTTP Signature to the request's headers regarding the policy configuration Http Signature Scheme
+     *
+     * @param request   the request on which add the header
+     * @param signature the signature to use in the header
+     */
+    void setSignatureHeader(Request request, Signature signature) {
+        if (HttpSignatureScheme.SIGNATURE.equals(configuration.scheme())) {
+            final String substring = signature.toString().substring(10); // Remove the "Signature " part of the signature
+            // https://tools.ietf.org/id/draft-cavage-http-signatures-12.html#rfc.section.4.1
+            request.headers().set("Signature", substring);
+        } else {
+            // https://tools.ietf.org/id/draft-cavage-http-signatures-12.html#rfc.section.3.1
+            request.headers().set(HttpHeaderNames.AUTHORIZATION, signature.toString());
+        }
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "scheme": "CUSTOM_HEADER",
+    "headersDelimiter": ":",
+    "headers": ["kafka-topic", "kafka-partition"],
+    "keyId": "my-key-id",
+    "secret": "webhook-signing-secret",
+    "targetSignatureHeader": "X-HMAC-Signature",
+    "algorithm": "HMAC_SHA256",
+    "signPayload": false,
+    "prependHeadersToBody": true
+}

@@ -1,0 +1,8 @@
+{
+    "scheme": "CUSTOM_HEADER",
+    "keyId": "my-key-id",
+    "secret": "your-secret-key",
+    "targetSignatureHeader": "X-HMAC-Signature",
+    "algorithm": "HMAC_SHA256",
+    "signPayload": true
+}

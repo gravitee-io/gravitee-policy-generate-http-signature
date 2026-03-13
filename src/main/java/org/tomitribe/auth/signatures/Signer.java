@@ -7,6 +7,7 @@ import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.Provider;
+import java.util.Collections;
 import java.util.Map;
 import javax.crypto.Mac;
 
@@ -74,9 +75,15 @@ public class Signer {
      *
      * @return a Signature object containing the signed message.
      */
-    public Signature sign(final String method, final String uri, final Map<String, String> headers, Long created, Long expires)
-        throws IOException {
-        final String signingString = createSigningString(method, uri, headers, created, expires);
+    public Signature sign(
+        final String method,
+        final String uri,
+        final Map<String, String> headers,
+        Long created,
+        Long expires,
+        String payload
+    ) throws IOException {
+        final String signingString = createSigningString(method, uri, headers, created, expires, payload);
 
         final byte[] binarySignature = sign.sign(signingString.getBytes("UTF-8"));
 
@@ -93,7 +100,8 @@ public class Signer {
             signature.getHeaders(),
             null,
             created,
-            expires
+            expires,
+            !signature.getHeaders().isEmpty()
         );
     }
 
@@ -108,13 +116,13 @@ public class Signer {
      *
      * @return a Signature object containing the signed message.
      */
-    public Signature sign(final String method, final String uri, final Map<String, String> headers) throws IOException {
+    public Signature sign(final String method, final String uri, final Map<String, String> headers, String payload) throws IOException {
         final long created = System.currentTimeMillis();
         Long expires = signature.getSignatureMaxValidityMilliseconds();
         if (expires != null) {
             expires += created;
         }
-        return sign(method, uri, headers, created, expires);
+        return sign(method, uri, headers, created, expires, payload);
     }
 
     /**
@@ -138,6 +146,31 @@ public class Signer {
         final Long expires
     ) throws IOException {
         return Signatures.createSigningString(signature.getHeaders(), method, uri, headers, created, expires);
+    }
+
+    /**
+     * Create and return the string which is used as input for the cryptographic signature.
+     *
+     * @param method The HTTP method.
+     * @param uri The path and query of the request target of the message.
+     *            The value must already be encoded exactly as it will be sent in the
+     *            request line of the HTTP message. No URL encoding is performed by this method.
+     * @param headers The HTTP headers.
+     * @param created The time when the signature is created.
+     * @param expires The time when the signature expires.
+     * @param payload The payload to be included in the signing string. It is not associated with any header name.
+     * @return The signing string.
+     * @throws IOException when an exception occurs while creating the signing string.
+     */
+    public String createSigningString(
+        final String method,
+        final String uri,
+        final Map<String, String> headers,
+        final Long created,
+        final Long expires,
+        final String payload
+    ) throws IOException {
+        return Signatures.createSigningString(signature.getHeaders(), method, uri, headers, created, expires, payload);
     }
 
     /**

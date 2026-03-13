@@ -18,91 +18,31 @@ package io.gravitee.policy.generatehttpsignature.configuration;
 import io.gravitee.policy.api.PolicyConfiguration;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Builder;
 
 /**
  * @author Yann TAVERNIER (yann.tavernier at graviteesource.com)
  * @author GraviteeSource Team
  */
-public class GenerateHttpSignaturePolicyConfiguration implements PolicyConfiguration {
-
-    private String keyId;
-
-    private HttpSignatureScheme scheme;
-
-    private Algorithm algorithm;
-
-    private String secret;
-
-    // List of headers which the client should at least use for HTTP signature creation
-    private List<String> headers = new ArrayList<>();
-
-    private boolean created = true;
-
-    private boolean expires = true;
-
-    private long validityDuration = 3;
-
-    public String getKeyId() {
-        return keyId;
-    }
-
-    public void setKeyId(String keyId) {
-        this.keyId = keyId;
-    }
-
-    public HttpSignatureScheme getScheme() {
-        return scheme;
-    }
-
-    public void setScheme(HttpSignatureScheme scheme) {
-        this.scheme = scheme;
-    }
-
-    public Algorithm getAlgorithm() {
-        return algorithm;
-    }
-
-    public void setAlgorithm(Algorithm algorithm) {
-        this.algorithm = algorithm;
-    }
-
-    public String getSecret() {
-        return secret;
-    }
-
-    public void setSecret(String secret) {
-        this.secret = secret;
-    }
-
-    public List<String> getHeaders() {
-        return headers;
-    }
-
-    public void setHeaders(List<String> headers) {
-        this.headers = headers;
-    }
-
-    public boolean isCreated() {
-        return created;
-    }
-
-    public void setCreated(boolean created) {
-        this.created = created;
-    }
-
-    public boolean isExpires() {
-        return expires;
-    }
-
-    public void setExpires(boolean expires) {
-        this.expires = expires;
-    }
-
-    public long getValidityDuration() {
-        return validityDuration;
-    }
-
-    public void setValidityDuration(long validityDuration) {
-        this.validityDuration = validityDuration;
-    }
-}
+@Builder
+public record GenerateHttpSignaturePolicyConfiguration(
+    String keyId,
+    HttpSignatureScheme scheme,
+    Algorithm algorithm,
+    String secret,
+    // List of headers which the client should at least use for signature creation
+    List<String> headers,
+    // Optional - Headers delimiter for additional headers to add to the signature creation
+    String headersDelimiter,
+    boolean created,
+    boolean expires,
+    long validityDuration,
+    // Optional - custom header name for the signature, only used if scheme is CUSTOM_HEADER
+    String targetSignatureHeader,
+    boolean signHeaders,
+    boolean signPayload,
+    boolean prependHeadersToBody,
+    boolean signMethod,
+    boolean signUri
+)
+    implements PolicyConfiguration {}
