@@ -8,18 +8,41 @@
             "description": "Signature Scheme.",
             "type": "string",
             "default": "AUTHORIZATION",
-            "enum": ["AUTHORIZATION", "SIGNATURE"],
+            "enum": ["AUTHORIZATION", "SIGNATURE", "CUSTOM_HEADER"],
             "x-schema-form": {
                 "type": "select",
                 "titleMap": {
                     "AUTHORIZATION": "\"Signature\" HTTP Authentication Scheme",
-                    "SIGNATURE": "\"Signature\" HTTP Header"
+                    "SIGNATURE": "\"Signature\" HTTP Header",
+                    "CUSTOM_HEADER": "\"Signature\" Custom name HTTP Header"
                 }
             },
             "gioConfig": {
                 "banner": {
                     "title": "Signature Scheme.",
-                    "text": "<ul><li>AUTHORIZATION: \"Signature\" HTTP Authentication Scheme</li><li>SIGNATURE: \"Signature\" HTTP Header</li></ul>"
+                    "text": "<ul><li>AUTHORIZATION: \"Signature\" HTTP Authentication Scheme</li><li>SIGNATURE: \"Signature\" HTTP Header</li><li>CUSTOM_HEADER: \"Signature\" Custom name HTTP Header</li></ul>"
+                }
+            }
+        },
+        "targetSignatureHeader": {
+            "title": "Custom Signature Header",
+            "description": "Specify the HTTP header that will contain the generated HMAC signature",
+            "type": "string",
+            "default": "X-HMAC-Signature",
+            "x-schema-form": {
+                "hidden": [
+                    {
+                        "$eq": {
+                            "scheme": "AUTHORIZATION"
+                        }
+                    }
+                ]
+            },
+            "gioConfig": {
+                "displayIf": {
+                    "$eq": {
+                        "value.scheme": ["CUSTOM_HEADER"]
+                    }
                 }
             }
         },
@@ -54,6 +77,58 @@
                 "type": "string",
                 "title": "Header"
             }
+        },
+        "signHeaders": {
+            "title": "Include headers in signature generation",
+            "default": true,
+            "description": "Base signing process on the request/response/message headers",
+            "type": "boolean"
+        },
+        "signPayload": {
+            "title": "Include payload in signature generation",
+            "default": false,
+            "description": "Base signing process on the request/response/message payload (Required for response flow)",
+            "type": "boolean"
+        },
+        "prependHeadersToBody": {
+            "title": "Prepend headers to body for signature generation",
+            "default": false,
+            "description": "The defined headers will be prepended to the body for signature generation. (Only applicable if the signPaylonad option is enabled)",
+            "type": "boolean"
+        },
+        "headersDelimiter": {
+            "title": "Delimiter",
+            "description": "Specify a delimiter to separate each header and the body/message",
+            "type": "string",
+            "default": ".",
+            "x-schema-form": {
+                "hidden": [
+                    {
+                        "$eq": {
+                            "value.prependHeadersToBody": false
+                        }
+                    }
+                ]
+            },
+            "gioConfig": {
+                "displayIf": {
+                    "$eq": {
+                        "prependHeadersToBody": true
+                    }
+                }
+            }
+        },
+        "signMethod": {
+            "title": "Include request method in signature generation",
+            "default": true,
+            "description": "Base signing process on the request method name (Highly recommended for request flow)",
+            "type": "boolean"
+        },
+        "signUri": {
+            "title": "Include request URI in signature generation",
+            "default": true,
+            "description": "Base signing process on the request URI name (Highly recommended for request flow)",
+            "type": "boolean"
         },
         "created": {
             "title": "Include the created timestamp in the signature",
@@ -90,5 +165,5 @@
             }
         }
     },
-    "required": ["scheme", "secret", "keyId", "validityDuration", "algorithm"]
+    "required": ["scheme", "secret", "keyId", "algorithm"]
 }

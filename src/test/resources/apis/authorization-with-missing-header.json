@@ -38,7 +38,8 @@
                         "validityDuration": 3,
                         "secret": "123123123",
                         "keyId": "123123123",
-                        "headers": ["Required header"]
+                        "headers": ["Required header"],
+                        "signHeaders": true
                     }
                 }
             ],

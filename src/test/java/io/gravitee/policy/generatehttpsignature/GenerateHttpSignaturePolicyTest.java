@@ -18,192 +18,630 @@ package io.gravitee.policy.generatehttpsignature;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import io.gravitee.common.http.HttpMethod;
 import io.gravitee.el.TemplateEngine;
-import io.gravitee.gateway.api.ExecutionContext;
-import io.gravitee.gateway.api.Request;
-import io.gravitee.gateway.api.Response;
+import io.gravitee.gateway.api.buffer.Buffer;
+import io.gravitee.gateway.api.http.HttpHeaderNames;
 import io.gravitee.gateway.api.http.HttpHeaders;
-import io.gravitee.policy.api.PolicyChain;
+import io.gravitee.gateway.reactive.api.ExecutionFailure;
+import io.gravitee.gateway.reactive.api.context.http.*;
+import io.gravitee.gateway.reactive.api.message.Message;
 import io.gravitee.policy.generatehttpsignature.configuration.Algorithm;
 import io.gravitee.policy.generatehttpsignature.configuration.GenerateHttpSignaturePolicyConfiguration;
 import io.gravitee.policy.generatehttpsignature.configuration.HttpSignatureScheme;
-import io.gravitee.reporter.api.http.Metrics;
-import java.io.IOException;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Maybe;
+import io.reactivex.rxjava3.observers.TestObserver;
+import java.util.Base64;
 import java.util.List;
-import java.util.stream.Stream;
-import org.junit.jupiter.api.Assertions;
+import java.util.Map;
+import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.tomitribe.auth.signatures.Signature;
-import org.tomitribe.auth.signatures.Signer;
 
 @ExtendWith(MockitoExtension.class)
 class GenerateHttpSignaturePolicyTest {
 
-    private GenerateHttpSignaturePolicy cut;
+    @Mock
+    private HttpPlainExecutionContext plainContext;
 
     @Mock
+    private HttpMessageExecutionContext messageContext;
+
+    @Mock
+    private TemplateEngine templateEngine;
+
+    @Mock
+    private HttpHeaders httpHeaders;
+
+    @Mock
+    private Message message;
+
+    @Mock
+    private Buffer buffer;
+
     private GenerateHttpSignaturePolicyConfiguration configuration;
 
     @BeforeEach
     void setUp() {
-        cut = new GenerateHttpSignaturePolicy(configuration);
+        configuration =
+            GenerateHttpSignaturePolicyConfiguration
+                .builder()
+                .scheme(HttpSignatureScheme.CUSTOM_HEADER)
+                .algorithm(Algorithm.HMAC_SHA256)
+                .keyId("test-key")
+                .secret("test-secret")
+                .targetSignatureHeader("X-HMAC-Signature")
+                .build();
     }
 
     @Test
-    @DisplayName("Should make policy chain fail because of invalid headers")
-    void shouldFailChain_invalidHeaders() {
-        final Request request = mock(Request.class);
-        final Response response = mock(Response.class);
-        final ExecutionContext executionContext = mock(ExecutionContext.class);
-        final PolicyChain policyChain = mock(PolicyChain.class);
-
-        when(configuration.getHeaders()).thenReturn(List.of("Host"));
-        when(request.headers()).thenReturn(buildHttpHeadersFromList(List.of("Date")));
-
-        cut.onRequest(request, response, executionContext, policyChain);
-
-        verify(policyChain, times(1)).failWith(any());
+    void shouldReturnCorrectPolicyId() {
+        GenerateHttpSignaturePolicy policy = new GenerateHttpSignaturePolicy(configuration);
+        assertThat(policy.id()).isEqualTo("generate-http-signature");
     }
 
     @Test
-    @DisplayName("Should make policy chain fail because of an exception during signing process")
-    void shouldFail_unableToSign() throws IOException {
-        final Request request = mock(Request.class);
-        final Response response = mock(Response.class);
-        final ExecutionContext context = mock(ExecutionContext.class);
-        final PolicyChain chain = mock(PolicyChain.class);
-        final TemplateEngine templateEngine = mock(TemplateEngine.class);
-        final GenerateHttpSignaturePolicy spy = spy(cut);
-        final Signer signer = mock(Signer.class);
+    void shouldFailOnRequestWhenDateHeaderIsMissingAndNoHeadersConfigured() {
+        configuration =
+            GenerateHttpSignaturePolicyConfiguration
+                .builder()
+                .scheme(HttpSignatureScheme.CUSTOM_HEADER)
+                .algorithm(Algorithm.HMAC_SHA256)
+                .keyId("test-key")
+                .secret("test-secret")
+                .targetSignatureHeader("X-HMAC-Signature")
+                .signHeaders(true)
+                .build();
 
-        when(configuration.getHeaders()).thenReturn(List.of("Host"));
-        when(configuration.getAlgorithm()).thenReturn(Algorithm.HMAC_SHA256);
-        when(configuration.isCreated()).thenReturn(true);
-        when(configuration.isExpires()).thenReturn(true);
-        when(configuration.getValidityDuration()).thenReturn(2L);
-        when(configuration.getKeyId()).thenReturn("keyId");
+        GenerateHttpSignaturePolicy policy = new GenerateHttpSignaturePolicy(configuration);
 
-        doReturn(signer).when(spy).buildSigner(any(), any());
-        when(signer.sign(any(), any(), any())).thenThrow(new IOException("exception-message"));
+        HttpPlainRequest request = mock(HttpPlainRequest.class);
+        doReturn(request).when(plainContext).request();
+        doReturn(httpHeaders).when(request).headers();
+        when(httpHeaders.contains(HttpHeaderNames.DATE)).thenReturn(false);
+        when(plainContext.interruptWith(any(ExecutionFailure.class))).thenReturn(Completable.complete());
 
-        final Metrics metrics = Metrics.on(System.currentTimeMillis()).build();
+        policy.onRequest(plainContext).test().assertComplete();
 
-        when(request.headers()).thenReturn(buildHttpHeadersFromList(List.of("Date", "Host")));
-        when(request.metrics()).thenReturn(metrics);
-        when(request.method()).thenReturn(HttpMethod.GET);
-        when(request.path()).thenReturn("/my/api");
-        when(context.getTemplateEngine()).thenReturn(templateEngine);
-        when(templateEngine.evalNow(eq("keyId"), any())).thenReturn("keyId");
-
-        spy.onRequest(request, response, context, chain);
-
-        assertThat(metrics.getMessage()).isEqualTo("exception-message");
-        verify(chain, times(1)).failWith(any());
-        verify(chain, never()).doNext(request, response);
+        ArgumentCaptor<ExecutionFailure> failureCaptor = ArgumentCaptor.forClass(ExecutionFailure.class);
+        verify(plainContext).interruptWith(failureCaptor.capture());
+        assertThat(failureCaptor.getValue().message()).contains("'Date' header is missing");
     }
 
     @Test
-    @DisplayName("Should execute policy properly")
-    public void shouldDoNext() {
-        final Request request = mock(Request.class);
-        final Response response = mock(Response.class);
-        final ExecutionContext context = mock(ExecutionContext.class);
-        final PolicyChain chain = mock(PolicyChain.class);
-        final TemplateEngine templateEngine = mock(TemplateEngine.class);
+    void shouldFailOnRequestWhenHeadersAreInvalid() {
+        configuration =
+            GenerateHttpSignaturePolicyConfiguration
+                .builder()
+                .headers(List.of("X-Required-Header"))
+                .algorithm(Algorithm.HMAC_SHA256)
+                .keyId("test-key")
+                .secret("test-secret")
+                .signHeaders(true)
+                .build();
+        GenerateHttpSignaturePolicy policy = new GenerateHttpSignaturePolicy(configuration);
 
-        when(configuration.getHeaders()).thenReturn(List.of("Host"));
-        when(configuration.getAlgorithm()).thenReturn(Algorithm.HMAC_SHA256);
-        when(configuration.isCreated()).thenReturn(true);
-        when(configuration.isExpires()).thenReturn(true);
-        when(configuration.getValidityDuration()).thenReturn(2L);
-        when(configuration.getKeyId()).thenReturn("keyId");
-        when(configuration.getSecret()).thenReturn("secret");
+        HttpPlainRequest request = mock(HttpPlainRequest.class);
+        doReturn(request).when(plainContext).request();
+        doReturn(httpHeaders).when(request).headers();
+        when(httpHeaders.containsAllKeys(anyList())).thenReturn(false);
+        when(httpHeaders.names()).thenReturn(java.util.Collections.emptySet());
+        when(plainContext.interruptWith(any(ExecutionFailure.class))).thenReturn(Completable.complete());
 
-        when(request.headers()).thenReturn(buildHttpHeadersFromList(List.of("Date", "Host")));
-        when(request.method()).thenReturn(HttpMethod.GET);
-        when(request.path()).thenReturn("/my/api");
-        when(context.getTemplateEngine()).thenReturn(templateEngine);
-        when(templateEngine.evalNow(eq("keyId"), any())).thenReturn("keyId");
-        when(templateEngine.evalNow(eq("secret"), any())).thenReturn("keyId");
+        policy.onRequest(plainContext).test().assertComplete();
 
-        cut.onRequest(request, response, context, chain);
-
-        verify(chain, times(1)).doNext(request, response);
+        ArgumentCaptor<ExecutionFailure> failureCaptor = ArgumentCaptor.forClass(ExecutionFailure.class);
+        verify(plainContext).interruptWith(failureCaptor.capture());
+        assertThat(failureCaptor.getValue().message()).contains("those headers are missing");
     }
 
-    @ParameterizedTest
-    @MethodSource("provideCheckConfigureHeadersData")
-    @DisplayName("Should check if the request's header are valid regarding policy's configuration and Signature minimal requirements")
-    void shouldCheckConfiguredHeaders(List<String> requestHeaders, List<String> configuredHeaders, String errorMessage) {
-        final HttpHeaders httpHeaders = buildHttpHeadersFromList(requestHeaders);
+    @Test
+    void shouldGenerateSignatureOnRequest() {
+        configuration =
+            GenerateHttpSignaturePolicyConfiguration
+                .builder()
+                .scheme(HttpSignatureScheme.SIGNATURE)
+                .algorithm(Algorithm.HMAC_SHA256)
+                .keyId("test-key")
+                .secret("test-secret")
+                .signMethod(true)
+                .signUri(true)
+                .signHeaders(true)
+                .build();
 
-        final String result = cut.checkHeaders(httpHeaders, configuredHeaders);
+        GenerateHttpSignaturePolicy policy = new GenerateHttpSignaturePolicy(configuration);
 
-        if (errorMessage == null) {
-            assertThat(result).isNull();
-        } else {
-            assertThat(result).contains(errorMessage);
+        HttpPlainRequest request = mock(HttpPlainRequest.class);
+        doReturn(request).when(plainContext).request();
+        doReturn(httpHeaders).when(request).headers();
+        HttpMethod httpMethod = mock(HttpMethod.class);
+        doReturn("method").when(httpMethod).name();
+        doReturn(httpMethod).when(request).method();
+        doReturn("/uri").when(request).uri();
+        when(httpHeaders.toSingleValueMap()).thenReturn(Map.of("Date", "01-01-2026"));
+        when(plainContext.getTemplateEngine()).thenReturn(templateEngine);
+        when(templateEngine.eval("test-secret", String.class)).thenReturn(Maybe.just("test-secret"));
+
+        when(httpHeaders.contains(HttpHeaderNames.DATE)).thenReturn(true);
+
+        policy.onRequest(plainContext).test().assertComplete();
+
+        verify(httpHeaders).set(eq("Signature"), anyString());
+    }
+
+    @Test
+    void shouldGenerateSignatureOnRequestHeadersAndBody() {
+        configuration =
+            GenerateHttpSignaturePolicyConfiguration
+                .builder()
+                .scheme(HttpSignatureScheme.SIGNATURE)
+                .algorithm(Algorithm.HMAC_SHA256)
+                .keyId("test-key")
+                .secret("test-secret")
+                .signMethod(true)
+                .signUri(true)
+                .signHeaders(true)
+                .signPayload(true)
+                .build();
+
+        GenerateHttpSignaturePolicy policy = new GenerateHttpSignaturePolicy(configuration);
+
+        HttpPlainRequest request = mock(HttpPlainRequest.class);
+        doReturn(request).when(plainContext).request();
+        doReturn(httpHeaders).when(request).headers();
+        HttpMethod httpMethod = mock(HttpMethod.class);
+        doReturn("method").when(httpMethod).name();
+        doReturn(httpMethod).when(request).method();
+        doReturn("/uri").when(request).uri();
+        String payload = "test payload";
+        when(buffer.toString()).thenReturn(payload);
+        doReturn(Maybe.just(buffer)).when(request).body();
+        when(httpHeaders.toSingleValueMap()).thenReturn(Map.of("Date", "01-01-2026"));
+        when(plainContext.getTemplateEngine()).thenReturn(templateEngine);
+        when(templateEngine.eval("test-secret", String.class)).thenReturn(Maybe.just("test-secret"));
+
+        when(httpHeaders.contains(HttpHeaderNames.DATE)).thenReturn(true);
+
+        policy.onRequest(plainContext).test().assertComplete();
+
+        verify(httpHeaders).set(eq("Signature"), anyString());
+    }
+
+    @Test
+    void shouldGenerateSignatureOnHttpResponse() {
+        GenerateHttpSignaturePolicy policy = new GenerateHttpSignaturePolicy(configuration);
+
+        String payload = "test payload";
+        when(buffer.toString()).thenReturn(payload);
+        doReturn(mockResponse(buffer)).when(plainContext).response();
+        doReturn(mockRequest()).when(plainContext).request();
+        when(plainContext.getTemplateEngine()).thenReturn(templateEngine);
+        when(templateEngine.eval("test-secret", String.class)).thenReturn(Maybe.just("test-secret"));
+
+        TestObserver<Void> testObserver = policy.onResponse(plainContext).test();
+
+        testObserver.assertComplete();
+        verify(httpHeaders).set(eq("X-HMAC-Signature"), anyString());
+    }
+
+    @Test
+    void shouldGenerateSignatureOnHttpResponseOnHeadersAndBody() {
+        configuration =
+            GenerateHttpSignaturePolicyConfiguration
+                .builder()
+                .scheme(HttpSignatureScheme.SIGNATURE)
+                .algorithm(Algorithm.HMAC_SHA256)
+                .keyId("test-key")
+                .secret("test-secret")
+                .signMethod(false)
+                .signUri(false)
+                .signHeaders(true)
+                .signPayload(true)
+                .build();
+        GenerateHttpSignaturePolicy policy = new GenerateHttpSignaturePolicy(configuration);
+
+        String payload = "test payload";
+        when(buffer.toString()).thenReturn(payload);
+        doReturn(mockResponse(buffer)).when(plainContext).response();
+        doReturn(Map.of("Date", "11.03.2026")).when(httpHeaders).toSingleValueMap();
+        doReturn(true).when(httpHeaders).contains("Date");
+        doReturn(mockRequest()).when(plainContext).request();
+        when(plainContext.getTemplateEngine()).thenReturn(templateEngine);
+        when(templateEngine.eval("test-secret", String.class)).thenReturn(Maybe.just("test-secret"));
+
+        TestObserver<Void> testObserver = policy.onResponse(plainContext).test();
+
+        testObserver.assertComplete();
+        verify(httpHeaders).set(eq("Signature"), anyString());
+    }
+
+    @Test
+    void shouldGenerateSignatureOnHttpResponseOnHeadersMethodAndBody() {
+        configuration =
+            GenerateHttpSignaturePolicyConfiguration
+                .builder()
+                .scheme(HttpSignatureScheme.SIGNATURE)
+                .algorithm(Algorithm.HMAC_SHA256)
+                .keyId("test-key")
+                .secret("test-secret")
+                .signMethod(true)
+                .signUri(false)
+                .signHeaders(true)
+                .signPayload(true)
+                .build();
+        GenerateHttpSignaturePolicy policy = new GenerateHttpSignaturePolicy(configuration);
+
+        String payload = "test payload";
+        when(buffer.toString()).thenReturn(payload);
+        doReturn(mockResponse(buffer)).when(plainContext).response();
+        doReturn(Map.of("Date", "11.03.2026")).when(httpHeaders).toSingleValueMap();
+        doReturn(true).when(httpHeaders).contains("Date");
+        HttpPlainRequest request = mockRequest();
+        doReturn(request).when(plainContext).request();
+        HttpMethod httpMethod = mock(HttpMethod.class);
+        doReturn("method").when(httpMethod).name();
+        doReturn(httpMethod).when(request).method();
+        when(plainContext.getTemplateEngine()).thenReturn(templateEngine);
+        when(templateEngine.eval("test-secret", String.class)).thenReturn(Maybe.just("test-secret"));
+
+        TestObserver<Void> testObserver = policy.onResponse(plainContext).test();
+
+        testObserver.assertComplete();
+        verify(httpHeaders).set(eq("Signature"), anyString());
+    }
+
+    @Test
+    void shouldGenerateSignatureOnHttpResponseOnHeadersMethodUriAndBody() {
+        configuration =
+            GenerateHttpSignaturePolicyConfiguration
+                .builder()
+                .scheme(HttpSignatureScheme.SIGNATURE)
+                .algorithm(Algorithm.HMAC_SHA256)
+                .keyId("test-key")
+                .secret("test-secret")
+                .signMethod(true)
+                .signUri(true)
+                .signHeaders(true)
+                .signPayload(true)
+                .build();
+        GenerateHttpSignaturePolicy policy = new GenerateHttpSignaturePolicy(configuration);
+
+        String payload = "test payload";
+        when(buffer.toString()).thenReturn(payload);
+        doReturn(mockResponse(buffer)).when(plainContext).response();
+        doReturn(Map.of("Date", "11.03.2026")).when(httpHeaders).toSingleValueMap();
+        doReturn(true).when(httpHeaders).contains("Date");
+        HttpPlainRequest request = mockRequest();
+        doReturn(request).when(plainContext).request();
+        HttpMethod httpMethod = mock(HttpMethod.class);
+        doReturn("method").when(httpMethod).name();
+        doReturn(httpMethod).when(request).method();
+        doReturn("/uri").when(request).uri();
+        when(plainContext.getTemplateEngine()).thenReturn(templateEngine);
+        when(templateEngine.eval("test-secret", String.class)).thenReturn(Maybe.just("test-secret"));
+
+        TestObserver<Void> testObserver = policy.onResponse(plainContext).test();
+
+        testObserver.assertComplete();
+        verify(httpHeaders).set(eq("Signature"), anyString());
+    }
+
+    @Test
+    void shouldGenerateDifferentSignaturesForDifferentPayloads() {
+        GenerateHttpSignaturePolicy policy = new GenerateHttpSignaturePolicy(configuration);
+
+        String payload1 = "payload1";
+        String payload2 = "payload2";
+
+        when(buffer.toString()).thenReturn(payload1);
+        doReturn(mockResponse(buffer)).when(plainContext).response();
+        doReturn(mockRequest()).when(plainContext).request();
+        when(plainContext.getTemplateEngine()).thenReturn(templateEngine);
+        when(templateEngine.eval("test-secret", String.class)).thenReturn(Maybe.just("test-secret"));
+
+        ArgumentCaptor<String> signatureCaptor = ArgumentCaptor.forClass(String.class);
+        policy.onResponse(plainContext).test().assertComplete();
+        verify(httpHeaders).set(eq("X-HMAC-Signature"), signatureCaptor.capture());
+        String signature1 = signatureCaptor.getValue();
+
+        reset(httpHeaders);
+
+        when(buffer.toString()).thenReturn(payload2);
+        policy.onResponse(plainContext).test().assertComplete();
+        verify(httpHeaders).set(eq("X-HMAC-Signature"), signatureCaptor.capture());
+        String signature2 = signatureCaptor.getValue();
+
+        assertThat(signature1).isNotEqualTo(signature2);
+    }
+
+    @Test
+    void shouldFailWhenSecretCannotBeResolved() {
+        GenerateHttpSignaturePolicy policy = new GenerateHttpSignaturePolicy(configuration);
+
+        when(buffer.toString()).thenReturn("payload");
+        doReturn(mockResponse(buffer)).when(plainContext).response();
+        doReturn(mockRequest()).when(plainContext).request();
+        when(plainContext.getTemplateEngine()).thenReturn(templateEngine);
+        when(templateEngine.eval("test-secret", String.class)).thenReturn(Maybe.empty());
+        when(plainContext.interruptWith(any(ExecutionFailure.class))).thenReturn(Completable.complete());
+
+        TestObserver<Void> testObserver = policy.onResponse(plainContext).test();
+
+        testObserver.assertComplete();
+        verify(plainContext).interruptWith(any(ExecutionFailure.class));
+    }
+
+    @Test
+    void shouldGenerateSignatureWithAdditionalHeaders() {
+        configuration =
+            GenerateHttpSignaturePolicyConfiguration
+                .builder()
+                .headers(List.of("X-Custom-Header"))
+                .headersDelimiter(":")
+                .prependHeadersToBody(true)
+                .algorithm(Algorithm.HMAC_SHA256)
+                .keyId("test-key")
+                .secret("test-secret")
+                .targetSignatureHeader("X-HMAC-Signature")
+                .build();
+
+        GenerateHttpSignaturePolicy policy = new GenerateHttpSignaturePolicy(configuration);
+
+        String payload = "test payload";
+        when(buffer.toString()).thenReturn(payload);
+        doReturn(mockResponse(buffer)).when(plainContext).response();
+        doReturn(mockRequest()).when(plainContext).request();
+        when(plainContext.getTemplateEngine()).thenReturn(templateEngine);
+        when(templateEngine.eval("test-secret", String.class)).thenReturn(Maybe.just("test-secret"));
+        when(httpHeaders.get("X-Custom-Header")).thenReturn("custom-value");
+        when(httpHeaders.toSingleValueMap()).thenReturn(Map.of("X-Custom-Header", "custom-value"));
+
+        TestObserver<Void> testObserver = policy.onResponse(plainContext).test();
+
+        testObserver.assertComplete();
+        verify(httpHeaders).set(eq("X-HMAC-Signature"), anyString());
+    }
+
+    @Test
+    void shouldFailWhenRequiredAdditionalHeaderIsMissing() {
+        configuration =
+            GenerateHttpSignaturePolicyConfiguration
+                .builder()
+                .headers(List.of("X-Required-Header"))
+                .headersDelimiter(":")
+                .prependHeadersToBody(true)
+                .algorithm(Algorithm.HMAC_SHA256)
+                .keyId("test-key")
+                .secret("test-secret")
+                .targetSignatureHeader("X-HMAC-Signature")
+                .build();
+
+        GenerateHttpSignaturePolicy policy = new GenerateHttpSignaturePolicy(configuration);
+
+        String payload = "test payload";
+        when(buffer.toString()).thenReturn(payload);
+        HttpPlainRequest request = mock(HttpPlainRequest.class);
+        doReturn(request).when(plainContext).request();
+        doReturn(mockResponse(buffer)).when(plainContext).response();
+        when(plainContext.getTemplateEngine()).thenReturn(templateEngine);
+        when(templateEngine.eval("test-secret", String.class)).thenReturn(Maybe.just("test-secret"));
+        when(httpHeaders.get("X-Required-Header")).thenReturn(null);
+        when(plainContext.interruptWith(any(ExecutionFailure.class))).thenReturn(Completable.complete());
+
+        TestObserver<Void> testObserver = policy.onResponse(plainContext).test();
+
+        testObserver.assertComplete();
+        ArgumentCaptor<ExecutionFailure> failureCaptor = ArgumentCaptor.forClass(ExecutionFailure.class);
+        verify(plainContext).interruptWith(failureCaptor.capture());
+        assertThat(failureCaptor.getValue().key()).isEqualTo("HTTP_SIGNATURE_ADDITIONAL_HEADERS_NOT_VALID");
+    }
+
+    @Test
+    void shouldGenerateValidBase64Signature() {
+        GenerateHttpSignaturePolicy policy = new GenerateHttpSignaturePolicy(configuration);
+
+        String payload = "test payload";
+        when(buffer.toString()).thenReturn(payload);
+        doReturn(mockResponse(buffer)).when(plainContext).response();
+        doReturn(mockRequest()).when(plainContext).request();
+        when(plainContext.getTemplateEngine()).thenReturn(templateEngine);
+        when(templateEngine.eval("test-secret", String.class)).thenReturn(Maybe.just("test-secret"));
+
+        ArgumentCaptor<String> signatureCaptor = ArgumentCaptor.forClass(String.class);
+        policy.onResponse(plainContext).test().assertComplete();
+        verify(httpHeaders).set(eq("X-HMAC-Signature"), signatureCaptor.capture());
+
+        String signature = signatureCaptor.getValue();
+        assertThat(signature).isNotNull();
+        int signatureIndex = signature.indexOf("signature="); // The signature should contain the "signature=" part as per the HTTP Signature spec)
+        String signatureBase64Part = signature.substring(signatureIndex + "signature=".length()).replaceAll("\"", ""); // Extract the base64 part of the signature and remove any surrounding quotes
+
+        // Verify it's valid base64
+        try {
+            byte[] decoded = Base64.getDecoder().decode(signatureBase64Part);
+            assertThat(decoded).isNotEmpty();
+        } catch (IllegalArgumentException e) {
+            throw new AssertionError("Signature is not valid base64", e);
         }
     }
 
-    @ParameterizedTest
-    @CsvSource(value = { "AUTHORIZATION,Authorization,Signature signatureContent", "SIGNATURE,Signature,signatureContent" })
-    @DisplayName("Should add the correct header to request depending on HTTP Signature Scheme configuration")
-    void shouldSetSignatureHeader(String httpSignatureScheme, String expectedHeaderKey, String expectedHeaderValue) {
-        final Signature signature = mock(Signature.class);
-        final Request request = mock(Request.class);
-        final HttpHeaders httpHeaders = HttpHeaders.create();
+    @Test
+    void shouldUseDifferentAlgorithms() {
+        String payload = "test payload";
+        when(buffer.toString()).thenReturn(payload);
+        doReturn(mockResponse(buffer)).when(plainContext).response();
+        doReturn(mockRequest()).when(plainContext).request();
+        when(plainContext.getTemplateEngine()).thenReturn(templateEngine);
+        when(templateEngine.eval("test-secret", String.class)).thenReturn(Maybe.just("test-secret"));
 
-        when(request.headers()).thenReturn(httpHeaders);
-        when(signature.toString()).thenReturn("Signature signatureContent");
-        when(configuration.getScheme()).thenReturn(HttpSignatureScheme.valueOf(httpSignatureScheme));
+        ArgumentCaptor<String> signatureCaptor = ArgumentCaptor.forClass(String.class);
 
-        cut.setSignatureHeader(request, signature);
+        // Test SHA1
+        GenerateHttpSignaturePolicyConfiguration configSHA1 = GenerateHttpSignaturePolicyConfiguration
+            .builder()
+            .scheme(HttpSignatureScheme.CUSTOM_HEADER)
+            .algorithm(Algorithm.HMAC_SHA1)
+            .keyId("test-key")
+            .secret("test-secret")
+            .targetSignatureHeader("X-HMAC-Signature")
+            .build();
+        GenerateHttpSignaturePolicy policySHA1 = new GenerateHttpSignaturePolicy(configSHA1);
+        policySHA1.onResponse(plainContext).test().assertComplete();
+        verify(httpHeaders).set(eq("X-HMAC-Signature"), signatureCaptor.capture());
+        String signatureSHA1 = signatureCaptor.getValue();
 
-        Assertions.assertTrue(request.headers().contains(expectedHeaderKey));
-        assertThat(request.headers().getAll(expectedHeaderKey)).hasSize(1);
-        assertThat(request.headers().get(expectedHeaderKey)).isEqualTo(expectedHeaderValue);
+        reset(httpHeaders);
+
+        // Test SHA256
+        GenerateHttpSignaturePolicyConfiguration configSHA256 = GenerateHttpSignaturePolicyConfiguration
+            .builder()
+            .scheme(HttpSignatureScheme.CUSTOM_HEADER)
+            .algorithm(Algorithm.HMAC_SHA256)
+            .keyId("test-key")
+            .secret("test-secret")
+            .targetSignatureHeader("X-HMAC-Signature")
+            .build();
+        GenerateHttpSignaturePolicy policySHA256 = new GenerateHttpSignaturePolicy(configSHA256);
+        policySHA256.onResponse(plainContext).test().assertComplete();
+        verify(httpHeaders).set(eq("X-HMAC-Signature"), signatureCaptor.capture());
+        String signatureSHA256 = signatureCaptor.getValue();
+
+        reset(httpHeaders);
+
+        // Test SHA512
+        GenerateHttpSignaturePolicyConfiguration configSHA512 = GenerateHttpSignaturePolicyConfiguration
+            .builder()
+            .scheme(HttpSignatureScheme.CUSTOM_HEADER)
+            .algorithm(Algorithm.HMAC_SHA512)
+            .keyId("test-key")
+            .secret("test-secret")
+            .targetSignatureHeader("X-HMAC-Signature")
+            .build();
+        GenerateHttpSignaturePolicy policySHA512 = new GenerateHttpSignaturePolicy(configSHA512);
+        policySHA512.onResponse(plainContext).test().assertComplete();
+        verify(httpHeaders).set(eq("X-HMAC-Signature"), signatureCaptor.capture());
+        String signatureSHA512 = signatureCaptor.getValue();
+
+        // All signatures should be different
+        assertThat(signatureSHA1).isNotEqualTo(signatureSHA256);
+        assertThat(signatureSHA256).isNotEqualTo(signatureSHA512);
+        assertThat(signatureSHA1).isNotEqualTo(signatureSHA512);
     }
 
-    /**
-     * Provide a stream of Arguments for testing checkHeaders function.
-     *
-     * @return a Stream of Arguments composed of
-     * - A list of String representing the request's headers
-     * - A list of String representing the policy configurations's headers
-     * - A partial string that have to be contained by the error message, null if should not be in error.
-     */
-    private static Stream<Arguments> provideCheckConfigureHeadersData() {
-        return Stream.of(
-            Arguments.of(List.of(), List.of("Host"), "[Host]"),
-            Arguments.of(List.of("Accept-Encoding", "X-Gravitee-Header"), List.of("Host", "Accept"), "[Host, Accept]"),
-            Arguments.of(List.of("Host"), List.of("Host"), null),
-            Arguments.of(List.of("Host"), List.of(), "'Date' header is missing"),
-            Arguments.of(List.of("Date"), List.of(), null)
-        );
+    @Test
+    void shouldGenerateSignatureOnMessageResponse() {
+        GenerateHttpSignaturePolicy policy = new GenerateHttpSignaturePolicy(configuration);
+
+        String payload = "message payload";
+        when(message.content()).thenReturn(Buffer.buffer(payload));
+        when(message.headers()).thenReturn(httpHeaders);
+
+        HttpMessageRequest request = mock(HttpMessageRequest.class);
+
+        HttpMessageResponse response = mockMessageResponse();
+        when(messageContext.response()).thenReturn(response);
+
+        when(messageContext.getTemplateEngine()).thenReturn(templateEngine);
+        when(templateEngine.eval("test-secret", String.class)).thenReturn(Maybe.just("test-secret"));
+
+        ArgumentCaptor<Function<Message, Maybe<Message>>> onMessageCaptor = ArgumentCaptor.forClass(Function.class);
+
+        policy.onMessageResponse(messageContext).test().assertComplete();
+
+        verify(response).onMessage(onMessageCaptor.capture());
+        onMessageCaptor.getValue().apply(message).test().assertComplete();
+
+        verify(httpHeaders).set(eq("X-HMAC-Signature"), anyString());
     }
 
-    private HttpHeaders buildHttpHeadersFromList(List<String> requestHeaders) {
-        final HttpHeaders httpHeaders = HttpHeaders.create();
-        requestHeaders.forEach(header -> httpHeaders.set(header, ""));
-        return httpHeaders;
+    @Test
+    void shouldFailWhenSecretCannotBeResolvedOnMessageResponse() {
+        GenerateHttpSignaturePolicy policy = new GenerateHttpSignaturePolicy(configuration);
+
+        String payload = "message payload";
+        when(message.content()).thenReturn(Buffer.buffer(payload));
+        when(message.headers()).thenReturn(httpHeaders);
+
+        when(messageContext.getTemplateEngine()).thenReturn(templateEngine);
+        when(templateEngine.eval("test-secret", String.class)).thenReturn(Maybe.empty());
+        when(messageContext.interruptMessageWith(any(ExecutionFailure.class))).thenReturn(Maybe.empty());
+
+        HttpMessageResponse response = mockMessageResponse();
+        when(messageContext.response()).thenReturn(response);
+
+        ArgumentCaptor<Function<Message, Maybe<Message>>> onMessageCaptor = ArgumentCaptor.forClass(Function.class);
+
+        policy.onMessageResponse(messageContext).test().assertComplete();
+
+        verify(response).onMessage(onMessageCaptor.capture());
+        onMessageCaptor.getValue().apply(message).test().assertComplete();
+
+        verify(messageContext).interruptMessageWith(any(ExecutionFailure.class));
+    }
+
+    @Test
+    void shouldGenerateSignatureWithAdditionalHeadersOnMessageResponse() {
+        configuration =
+            GenerateHttpSignaturePolicyConfiguration
+                .builder()
+                .scheme(HttpSignatureScheme.CUSTOM_HEADER)
+                .headers(List.of("X-Custom-Header"))
+                .headersDelimiter(":")
+                .prependHeadersToBody(true)
+                .algorithm(Algorithm.HMAC_SHA256)
+                .keyId("test-key")
+                .secret("test-secret")
+                .targetSignatureHeader("X-HMAC-Signature")
+                .build();
+
+        GenerateHttpSignaturePolicy policy = new GenerateHttpSignaturePolicy(configuration);
+
+        String payload = "message payload";
+        when(message.content()).thenReturn(Buffer.buffer(payload));
+        when(message.headers()).thenReturn(httpHeaders);
+
+        HttpMessageResponse response = mockMessageResponse();
+        when(messageContext.response()).thenReturn(response);
+
+        when(messageContext.getTemplateEngine()).thenReturn(templateEngine);
+        when(templateEngine.eval("test-secret", String.class)).thenReturn(Maybe.just("test-secret"));
+        when(httpHeaders.get("X-Custom-Header")).thenReturn("custom-value");
+        when(httpHeaders.toSingleValueMap()).thenReturn(Map.of("X-Custom-Header", "custom-value"));
+
+        ArgumentCaptor<Function<Message, Maybe<Message>>> onMessageCaptor = ArgumentCaptor.forClass(Function.class);
+
+        policy.onMessageResponse(messageContext).test().assertComplete();
+
+        verify(response).onMessage(onMessageCaptor.capture());
+        onMessageCaptor.getValue().apply(message).test().assertComplete();
+
+        verify(httpHeaders).set(eq("X-HMAC-Signature"), anyString());
+    }
+
+    // Helper methods
+
+    private HttpPlainResponse mockResponse(Buffer buffer) {
+        HttpPlainResponse response = mock(HttpPlainResponse.class);
+        doReturn(Maybe.just(buffer)).when(response).body();
+        doReturn(httpHeaders).when(response).headers();
+        return response;
+    }
+
+    private HttpPlainRequest mockRequest() {
+        HttpPlainRequest request = mock(HttpPlainRequest.class);
+        return request;
+    }
+
+    private HttpMessageResponse mockMessageResponse() {
+        HttpMessageResponse response = mock(HttpMessageResponse.class);
+        doAnswer(invocation -> Completable.complete()).when(response).onMessage(any());
+        return response;
     }
 }

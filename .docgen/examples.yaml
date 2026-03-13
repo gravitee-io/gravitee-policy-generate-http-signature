@@ -1,0 +1,19 @@
+rawExamples:
+    - title: Proxy API on Response phase - Basic signature
+      templateRef: v4-api-proxy
+      language: json
+      properties:
+          phase: response
+      file: .docgen/examples/basic_response_signature.json
+    - title: Proxy API on Response phase - Signature with additional headers
+      templateRef: v4-api-proxy
+      language: json
+      properties:
+          phase: response
+      file: .docgen/examples/response_signature_with_headers.json
+    - title: Response phase with secret from Secret Manager
+      templateRef: v4-api-proxy
+      language: json
+      properties:
+          phase: response
+      file: .docgen/examples/response_signature_secret_manager.json

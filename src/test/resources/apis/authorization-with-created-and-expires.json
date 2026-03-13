@@ -37,7 +37,8 @@
                         "expires": true,
                         "validityDuration": 2,
                         "secret": "secret",
-                        "keyId": "keyId"
+                        "keyId": "keyId",
+                        "signHeaders": true
                     }
                 }
             ],

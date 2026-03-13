@@ -3,13 +3,7 @@ package org.tomitribe.auth.signatures;
 import java.security.spec.AlgorithmParameterSpec;
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -143,9 +137,10 @@ public class Signature {
         final String signingAlgorithm,
         final String algorithm,
         final AlgorithmParameterSpec parameterSpec,
-        final List<String> headers
+        final List<String> headers,
+        final boolean signHeaders
     ) {
-        this(keyId, getSigningAlgorithm(signingAlgorithm), getAlgorithm(algorithm), parameterSpec, null, headers);
+        this(keyId, getSigningAlgorithm(signingAlgorithm), getAlgorithm(algorithm), parameterSpec, null, headers, signHeaders);
     }
 
     private static Algorithm getAlgorithm(final String algorithm) {
@@ -159,23 +154,29 @@ public class Signature {
     }
 
     @Deprecated
-    public Signature(final String keyId, final String algorithm, final String signature, final String... headers) {
-        this(keyId, getAlgorithm(algorithm), signature, headers);
+    public Signature(final String keyId, final String algorithm, final String signature, boolean signHeaders, final String... headers) {
+        this(keyId, getAlgorithm(algorithm), signature, signHeaders, headers);
     }
 
     @Deprecated
-    public Signature(final String keyId, final Algorithm algorithm, final String signature, final String... headers) {
-        this(keyId, algorithm, signature, Arrays.asList(headers));
+    public Signature(final String keyId, final Algorithm algorithm, final String signature, boolean signHeaders, final String... headers) {
+        this(keyId, algorithm, signature, Arrays.asList(headers), signHeaders);
     }
 
     @Deprecated
-    public Signature(final String keyId, final String algorithm, final String signature, final List<String> headers) {
-        this(keyId, getAlgorithm(algorithm), signature, headers);
+    public Signature(final String keyId, final String algorithm, final String signature, final List<String> headers, boolean signHeaders) {
+        this(keyId, getAlgorithm(algorithm), signature, headers, signHeaders);
     }
 
     @Deprecated
-    public Signature(final String keyId, final Algorithm algorithm, final String signature, final List<String> headers) {
-        this(keyId, null, algorithm, null, signature, headers, null, null, null);
+    public Signature(
+        final String keyId,
+        final Algorithm algorithm,
+        final String signature,
+        final List<String> headers,
+        boolean signHeaders
+    ) {
+        this(keyId, null, algorithm, null, signature, headers, null, null, null, signHeaders);
     }
 
     public Signature(
@@ -184,20 +185,10 @@ public class Signature {
         final String algorithm,
         final AlgorithmParameterSpec parameterSpec,
         final String signature,
-        final List<String> headers
+        final List<String> headers,
+        boolean signHeaders
     ) {
-        this(keyId, getSigningAlgorithm(signingAlgorithm), getAlgorithm(algorithm), parameterSpec, signature, headers);
-    }
-
-    public Signature(
-        final String keyId,
-        final SigningAlgorithm signingAlgorithm,
-        final Algorithm algorithm,
-        final AlgorithmParameterSpec parameterSpec,
-        final String signature,
-        final List<String> headers
-    ) {
-        this(keyId, signingAlgorithm, algorithm, parameterSpec, signature, headers, null);
+        this(keyId, getSigningAlgorithm(signingAlgorithm), getAlgorithm(algorithm), parameterSpec, signature, headers, signHeaders);
     }
 
     public Signature(
@@ -207,9 +198,22 @@ public class Signature {
         final AlgorithmParameterSpec parameterSpec,
         final String signature,
         final List<String> headers,
-        final Long maxSignatureValidityDuration
+        boolean signHeaders
     ) {
-        this(keyId, signingAlgorithm, algorithm, parameterSpec, signature, headers, maxSignatureValidityDuration, null, null);
+        this(keyId, signingAlgorithm, algorithm, parameterSpec, signature, headers, null, signHeaders);
+    }
+
+    public Signature(
+        final String keyId,
+        final SigningAlgorithm signingAlgorithm,
+        final Algorithm algorithm,
+        final AlgorithmParameterSpec parameterSpec,
+        final String signature,
+        final List<String> headers,
+        final Long maxSignatureValidityDuration,
+        boolean signHeaders
+    ) {
+        this(keyId, signingAlgorithm, algorithm, parameterSpec, signature, headers, maxSignatureValidityDuration, null, null, signHeaders);
     }
 
     public Signature(
@@ -221,7 +225,8 @@ public class Signature {
         final List<String> headers,
         final Long maxSignatureValidityDuration,
         final Long signatureCreatedTime,
-        final Long signatureExpiresTime
+        final Long signatureExpiresTime,
+        final boolean signHeaders
     ) {
         if (keyId == null || keyId.trim().isEmpty()) {
             throw new IllegalArgumentException("keyId is required.");
@@ -255,11 +260,10 @@ public class Signature {
 
         this.parameterSpec = parameterSpec;
 
-        if (headers == null || headers.size() == 0) {
-            final List<String> list = Arrays.asList("date");
-            this.headers = Collections.unmodifiableList(list);
+        if (signHeaders && (headers == null || headers.isEmpty())) {
+            this.headers = List.of("date");
         } else {
-            this.headers = Collections.unmodifiableList(lowercase(headers));
+            this.headers = Collections.unmodifiableList(lowercase(Optional.ofNullable(headers).orElseGet(List::of)));
         }
     }
 
@@ -550,7 +554,8 @@ public class Signature {
                 headers,
                 null,
                 created,
-                expires
+                expires,
+                true
             );
             s.verifySignatureValidityDates();
             return s;

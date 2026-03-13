@@ -1,0 +1,5 @@
+rows:
+    - data:
+          key: WEBHOOK_SIGNATURE_ERROR
+    - data:
+          key: WEBHOOK_ADDITIONAL_HEADERS_NOT_VALID
