@@ -26,7 +26,7 @@ import io.gravitee.gateway.reactive.api.message.Message;
 import io.gravitee.gateway.reactive.api.policy.http.HttpPolicy;
 import io.gravitee.policy.generatehttpsignature.configuration.GenerateHttpSignaturePolicyConfiguration;
 import io.gravitee.policy.generatehttpsignature.configuration.HttpSignatureScheme;
-import io.gravitee.policy.generatehttpsignature.v2.GenerateHttpSignaturePolicyV2;
+import io.gravitee.policy.generatehttpsignature.v3.GenerateHttpSignaturePolicyV3;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Maybe;
 import java.io.IOException;
@@ -44,7 +44,7 @@ import org.tomitribe.auth.signatures.Signer;
  * @author Brent HUNTER (brent.hunter at graviteesource.com)
  * @author GraviteeSource Team
  */
-public class GenerateHttpSignaturePolicy extends GenerateHttpSignaturePolicyV2 implements HttpPolicy {
+public class GenerateHttpSignaturePolicy extends GenerateHttpSignaturePolicyV3 implements HttpPolicy {
 
     private static final Logger logger = LoggerFactory.getLogger(GenerateHttpSignaturePolicy.class);
 

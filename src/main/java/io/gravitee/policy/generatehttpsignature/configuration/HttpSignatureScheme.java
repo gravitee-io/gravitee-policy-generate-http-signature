@@ -21,7 +21,6 @@ import lombok.Getter;
  * @author Yann TAVERNIER (yann.tavernier at graviteesource.com)
  * @author GraviteeSource Team
  */
-@Getter
 public enum HttpSignatureScheme {
     AUTHORIZATION,
     SIGNATURE,

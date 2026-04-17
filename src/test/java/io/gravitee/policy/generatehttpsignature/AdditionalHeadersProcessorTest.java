@@ -21,7 +21,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.gravitee.policy.generatehttpsignature.configuration.Algorithm;
 import io.gravitee.policy.generatehttpsignature.configuration.GenerateHttpSignaturePolicyConfiguration;
 import io.gravitee.policy.generatehttpsignature.configuration.HttpSignatureScheme;
-import io.gravitee.policy.generatehttpsignature.configuration.SchemeTypeConfiguration;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
