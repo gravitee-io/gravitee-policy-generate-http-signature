@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.gravitee.policy.generatehttpsignature.v2;
+package io.gravitee.policy.generatehttpsignature.v3;
 
 import static org.springframework.util.CollectionUtils.isEmpty;
 
@@ -44,9 +44,9 @@ import org.tomitribe.auth.signatures.Signer;
  * @author Yann TAVERNIER (yann.tavernier at graviteesource.com)
  * @author GraviteeSource Team
  */
-public class GenerateHttpSignaturePolicyV2 {
+public class GenerateHttpSignaturePolicyV3 {
 
-    private static final Logger logger = LoggerFactory.getLogger(GenerateHttpSignaturePolicyV2.class);
+    private static final Logger logger = LoggerFactory.getLogger(GenerateHttpSignaturePolicyV3.class);
 
     protected static final String HTTP_SIGNATURE_IMPOSSIBLE_GENERATION = "HTTP_SIGNATURE_IMPOSSIBLE_GENERATION";
     protected static final String HTTP_SIGNATURE_ADDITIONAL_HEADERS_NOT_VALID = "HTTP_SIGNATURE_ADDITIONAL_HEADERS_NOT_VALID";
@@ -54,7 +54,7 @@ public class GenerateHttpSignaturePolicyV2 {
 
     protected final GenerateHttpSignaturePolicyConfiguration configuration;
 
-    public GenerateHttpSignaturePolicyV2(GenerateHttpSignaturePolicyConfiguration configuration) {
+    public GenerateHttpSignaturePolicyV3(GenerateHttpSignaturePolicyConfiguration configuration) {
         this.configuration = configuration;
     }
 

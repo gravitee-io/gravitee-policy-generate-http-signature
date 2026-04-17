@@ -16,7 +16,6 @@
 package io.gravitee.policy.generatehttpsignature;
 
 import io.gravitee.policy.generatehttpsignature.configuration.GenerateHttpSignaturePolicyConfiguration;
-import io.gravitee.policy.generatehttpsignature.configuration.SchemeTypeConfiguration;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;

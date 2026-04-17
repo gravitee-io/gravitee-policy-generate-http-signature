@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.gravitee.policy.generatehttpsignature.v2;
+package io.gravitee.policy.generatehttpsignature.v3;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -56,7 +56,7 @@ import org.tomitribe.auth.signatures.Signer;
 @ExtendWith(MockitoExtension.class)
 class GenerateHttpSignaturePolicyTest {
 
-    private GenerateHttpSignaturePolicyV2 cut;
+    private GenerateHttpSignaturePolicyV3 cut;
 
     private GenerateHttpSignaturePolicyConfiguration configuration;
 
@@ -74,7 +74,7 @@ class GenerateHttpSignaturePolicyTest {
                 .secret("secret")
                 .scheme(HttpSignatureScheme.SIGNATURE)
                 .build();
-        cut = new GenerateHttpSignaturePolicyV2(configuration);
+        cut = new GenerateHttpSignaturePolicyV3(configuration);
     }
 
     @Test
@@ -100,7 +100,7 @@ class GenerateHttpSignaturePolicyTest {
         final ExecutionContext context = mock(ExecutionContext.class);
         final PolicyChain chain = mock(PolicyChain.class);
         final TemplateEngine templateEngine = mock(TemplateEngine.class);
-        final GenerateHttpSignaturePolicyV2 spy = spy(cut);
+        final GenerateHttpSignaturePolicyV3 spy = spy(cut);
         final Signer signer = mock(Signer.class);
 
         doReturn(signer).when(spy).buildSigner(any(), any());
@@ -181,7 +181,7 @@ class GenerateHttpSignaturePolicyTest {
             .secret("secret")
             .scheme(HttpSignatureScheme.valueOf(httpSignatureScheme))
             .build();
-        GenerateHttpSignaturePolicyV2 testCut = new GenerateHttpSignaturePolicyV2(testConfig);
+        GenerateHttpSignaturePolicyV3 testCut = new GenerateHttpSignaturePolicyV3(testConfig);
 
         testCut.setSignatureHeader(request, signature);
 
