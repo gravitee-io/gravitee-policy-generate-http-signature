@@ -1787,6 +1787,13 @@ Strikethrough text indicates that a version is deprecated.
 
 ## Changelog
 
+### [1.5.0](https://github.com/gravitee-io/gravitee-policy-generate-http-signature/compare/1.4.0...1.5.0) (2026-04-28)
+
+
+##### Features
+
+* add response/subsribe phase support ([854241b](https://github.com/gravitee-io/gravitee-policy-generate-http-signature/commit/854241b15d557310f3cbf24da2cba5310a648896))
+
 ### [1.4.0](https://github.com/gravitee-io/gravitee-policy-generate-http-signature/compare/1.3.0...1.4.0) (2025-08-27)
 
 
