@@ -62,18 +62,16 @@ class GenerateHttpSignaturePolicyTest {
 
     @BeforeEach
     void setUp() {
-        configuration =
-            GenerateHttpSignaturePolicyConfiguration
-                .builder()
-                .headers(List.of("Host"))
-                .algorithm(Algorithm.HMAC_SHA256)
-                .created(true)
-                .expires(true)
-                .validityDuration(2L)
-                .keyId("keyId")
-                .secret("secret")
-                .scheme(HttpSignatureScheme.SIGNATURE)
-                .build();
+        configuration = GenerateHttpSignaturePolicyConfiguration.builder()
+            .headers(List.of("Host"))
+            .algorithm(Algorithm.HMAC_SHA256)
+            .created(true)
+            .expires(true)
+            .validityDuration(2L)
+            .keyId("keyId")
+            .secret("secret")
+            .scheme(HttpSignatureScheme.SIGNATURE)
+            .build();
         cut = new GenerateHttpSignaturePolicyV3(configuration);
     }
 
@@ -170,8 +168,7 @@ class GenerateHttpSignaturePolicyTest {
         when(signature.toString()).thenReturn("Signature signatureContent");
 
         // Create a new configuration with the desired scheme
-        GenerateHttpSignaturePolicyConfiguration testConfig = GenerateHttpSignaturePolicyConfiguration
-            .builder()
+        GenerateHttpSignaturePolicyConfiguration testConfig = GenerateHttpSignaturePolicyConfiguration.builder()
             .headers(List.of("Host"))
             .algorithm(Algorithm.HMAC_SHA256)
             .created(true)

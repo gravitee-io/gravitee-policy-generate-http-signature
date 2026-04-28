@@ -44,5 +44,4 @@ public record GenerateHttpSignaturePolicyConfiguration(
     boolean prependHeadersToBody,
     boolean signMethod,
     boolean signUri
-)
-    implements PolicyConfiguration {}
+) implements PolicyConfiguration {}

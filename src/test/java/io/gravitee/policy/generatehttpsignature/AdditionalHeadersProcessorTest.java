@@ -39,15 +39,13 @@ class AdditionalHeadersProcessorTest {
 
     @Test
     void shouldThrowExceptionWhenNoHeadersConfigured() {
-        configuration =
-            GenerateHttpSignaturePolicyConfiguration
-                .builder()
-                .algorithm(Algorithm.HMAC_SHA256)
-                .scheme(HttpSignatureScheme.CUSTOM_HEADER)
-                .headers(List.of())
-                .headersDelimiter(":")
-                .prependHeadersToBody(true)
-                .build();
+        configuration = GenerateHttpSignaturePolicyConfiguration.builder()
+            .algorithm(Algorithm.HMAC_SHA256)
+            .scheme(HttpSignatureScheme.CUSTOM_HEADER)
+            .headers(List.of())
+            .headersDelimiter(":")
+            .prependHeadersToBody(true)
+            .build();
 
         AdditionalHeadersProcessor processor = new AdditionalHeadersProcessor(configuration);
 
@@ -58,15 +56,13 @@ class AdditionalHeadersProcessorTest {
 
     @Test
     void shouldProcessSingleHeaderCorrectly() {
-        configuration =
-            GenerateHttpSignaturePolicyConfiguration
-                .builder()
-                .algorithm(Algorithm.HMAC_SHA256)
-                .scheme(HttpSignatureScheme.CUSTOM_HEADER)
-                .headers(List.of("X-Custom-Header"))
-                .headersDelimiter(":")
-                .prependHeadersToBody(true)
-                .build();
+        configuration = GenerateHttpSignaturePolicyConfiguration.builder()
+            .algorithm(Algorithm.HMAC_SHA256)
+            .scheme(HttpSignatureScheme.CUSTOM_HEADER)
+            .headers(List.of("X-Custom-Header"))
+            .headersDelimiter(":")
+            .prependHeadersToBody(true)
+            .build();
 
         Map<String, String> headers = new HashMap<>();
         headers.put("X-Custom-Header", "custom-value");
@@ -79,15 +75,13 @@ class AdditionalHeadersProcessorTest {
 
     @Test
     void shouldProcessMultipleHeadersCorrectly() {
-        configuration =
-            GenerateHttpSignaturePolicyConfiguration
-                .builder()
-                .algorithm(Algorithm.HMAC_SHA256)
-                .scheme(HttpSignatureScheme.SIGNATURE)
-                .headers(Arrays.asList("X-Header-1", "X-Header-2", "X-Header-3"))
-                .headersDelimiter(":")
-                .prependHeadersToBody(true)
-                .build();
+        configuration = GenerateHttpSignaturePolicyConfiguration.builder()
+            .algorithm(Algorithm.HMAC_SHA256)
+            .scheme(HttpSignatureScheme.SIGNATURE)
+            .headers(Arrays.asList("X-Header-1", "X-Header-2", "X-Header-3"))
+            .headersDelimiter(":")
+            .prependHeadersToBody(true)
+            .build();
 
         Map<String, String> headers = new HashMap<>();
         headers.put("X-Header-1", "value1");
@@ -102,15 +96,13 @@ class AdditionalHeadersProcessorTest {
 
     @Test
     void shouldThrowExceptionWhenRequiredHeaderIsMissing() {
-        configuration =
-            GenerateHttpSignaturePolicyConfiguration
-                .builder()
-                .algorithm(Algorithm.HMAC_SHA256)
-                .scheme(HttpSignatureScheme.SIGNATURE)
-                .headers(List.of("X-Required-Header"))
-                .headersDelimiter(":")
-                .prependHeadersToBody(true)
-                .build();
+        configuration = GenerateHttpSignaturePolicyConfiguration.builder()
+            .algorithm(Algorithm.HMAC_SHA256)
+            .scheme(HttpSignatureScheme.SIGNATURE)
+            .headers(List.of("X-Required-Header"))
+            .headersDelimiter(":")
+            .prependHeadersToBody(true)
+            .build();
 
         Map<String, String> headers = new HashMap<>();
 
@@ -123,15 +115,13 @@ class AdditionalHeadersProcessorTest {
 
     @Test
     void shouldThrowExceptionWhenOneOfMultipleHeadersIsMissing() {
-        configuration =
-            GenerateHttpSignaturePolicyConfiguration
-                .builder()
-                .algorithm(Algorithm.HMAC_SHA256)
-                .scheme(HttpSignatureScheme.CUSTOM_HEADER)
-                .headers(Arrays.asList("X-Header-1", "X-Header-2", "X-Header-3"))
-                .headersDelimiter(":")
-                .prependHeadersToBody(true)
-                .build();
+        configuration = GenerateHttpSignaturePolicyConfiguration.builder()
+            .algorithm(Algorithm.HMAC_SHA256)
+            .scheme(HttpSignatureScheme.CUSTOM_HEADER)
+            .headers(Arrays.asList("X-Header-1", "X-Header-2", "X-Header-3"))
+            .headersDelimiter(":")
+            .prependHeadersToBody(true)
+            .build();
 
         Map<String, String> headers = new HashMap<>();
         headers.put("X-Header-1", "value1");
@@ -147,15 +137,13 @@ class AdditionalHeadersProcessorTest {
 
     @Test
     void shouldHandleEmptyPayload() {
-        configuration =
-            GenerateHttpSignaturePolicyConfiguration
-                .builder()
-                .algorithm(Algorithm.HMAC_SHA256)
-                .scheme(HttpSignatureScheme.SIGNATURE)
-                .headers(List.of("X-Custom-Header"))
-                .headersDelimiter(":")
-                .prependHeadersToBody(true)
-                .build();
+        configuration = GenerateHttpSignaturePolicyConfiguration.builder()
+            .algorithm(Algorithm.HMAC_SHA256)
+            .scheme(HttpSignatureScheme.SIGNATURE)
+            .headers(List.of("X-Custom-Header"))
+            .headersDelimiter(":")
+            .prependHeadersToBody(true)
+            .build();
 
         Map<String, String> headers = new HashMap<>();
         headers.put("X-Custom-Header", "custom-value");
@@ -168,15 +156,13 @@ class AdditionalHeadersProcessorTest {
 
     @Test
     void shouldHandleEmptyHeaderValue() {
-        configuration =
-            GenerateHttpSignaturePolicyConfiguration
-                .builder()
-                .algorithm(Algorithm.HMAC_SHA256)
-                .scheme(HttpSignatureScheme.SIGNATURE)
-                .headers(List.of("X-Custom-Header"))
-                .headersDelimiter(":")
-                .prependHeadersToBody(true)
-                .build();
+        configuration = GenerateHttpSignaturePolicyConfiguration.builder()
+            .algorithm(Algorithm.HMAC_SHA256)
+            .scheme(HttpSignatureScheme.SIGNATURE)
+            .headers(List.of("X-Custom-Header"))
+            .headersDelimiter(":")
+            .prependHeadersToBody(true)
+            .build();
 
         Map<String, String> headers = new HashMap<>();
         headers.put("X-Custom-Header", "");
@@ -189,15 +175,13 @@ class AdditionalHeadersProcessorTest {
 
     @Test
     void shouldHandleDifferentDelimiters() {
-        configuration =
-            GenerateHttpSignaturePolicyConfiguration
-                .builder()
-                .algorithm(Algorithm.HMAC_SHA256)
-                .scheme(HttpSignatureScheme.SIGNATURE)
-                .headers(Arrays.asList("X-Header-1", "X-Header-2"))
-                .headersDelimiter("|")
-                .prependHeadersToBody(true)
-                .build();
+        configuration = GenerateHttpSignaturePolicyConfiguration.builder()
+            .algorithm(Algorithm.HMAC_SHA256)
+            .scheme(HttpSignatureScheme.SIGNATURE)
+            .headers(Arrays.asList("X-Header-1", "X-Header-2"))
+            .headersDelimiter("|")
+            .prependHeadersToBody(true)
+            .build();
 
         Map<String, String> headers = new HashMap<>();
         headers.put("X-Header-1", "value1");
@@ -211,15 +195,13 @@ class AdditionalHeadersProcessorTest {
 
     @Test
     void shouldHandleEmptyDelimiter() {
-        configuration =
-            GenerateHttpSignaturePolicyConfiguration
-                .builder()
-                .algorithm(Algorithm.HMAC_SHA256)
-                .scheme(HttpSignatureScheme.SIGNATURE)
-                .headers(Arrays.asList("X-Header-1", "X-Header-2"))
-                .headersDelimiter("")
-                .prependHeadersToBody(true)
-                .build();
+        configuration = GenerateHttpSignaturePolicyConfiguration.builder()
+            .algorithm(Algorithm.HMAC_SHA256)
+            .scheme(HttpSignatureScheme.SIGNATURE)
+            .headers(Arrays.asList("X-Header-1", "X-Header-2"))
+            .headersDelimiter("")
+            .prependHeadersToBody(true)
+            .build();
 
         Map<String, String> headers = new HashMap<>();
         headers.put("X-Header-1", "value1");
@@ -233,15 +215,13 @@ class AdditionalHeadersProcessorTest {
 
     @Test
     void shouldHandleSpecialCharactersInHeaderValues() {
-        configuration =
-            GenerateHttpSignaturePolicyConfiguration
-                .builder()
-                .algorithm(Algorithm.HMAC_SHA256)
-                .scheme(HttpSignatureScheme.SIGNATURE)
-                .headers(List.of("X-Custom-Header"))
-                .headersDelimiter(":")
-                .prependHeadersToBody(true)
-                .build();
+        configuration = GenerateHttpSignaturePolicyConfiguration.builder()
+            .algorithm(Algorithm.HMAC_SHA256)
+            .scheme(HttpSignatureScheme.SIGNATURE)
+            .headers(List.of("X-Custom-Header"))
+            .headersDelimiter(":")
+            .prependHeadersToBody(true)
+            .build();
 
         Map<String, String> headers = new HashMap<>();
         headers.put("X-Custom-Header", "value-with-special-chars!@#$%^&*()");
@@ -254,15 +234,13 @@ class AdditionalHeadersProcessorTest {
 
     @Test
     void shouldHandleUnicodeInHeaderValues() {
-        configuration =
-            GenerateHttpSignaturePolicyConfiguration
-                .builder()
-                .algorithm(Algorithm.HMAC_SHA256)
-                .scheme(HttpSignatureScheme.SIGNATURE)
-                .headers(List.of("X-Custom-Header"))
-                .headersDelimiter(":")
-                .prependHeadersToBody(true)
-                .build();
+        configuration = GenerateHttpSignaturePolicyConfiguration.builder()
+            .algorithm(Algorithm.HMAC_SHA256)
+            .scheme(HttpSignatureScheme.SIGNATURE)
+            .headers(List.of("X-Custom-Header"))
+            .headersDelimiter(":")
+            .prependHeadersToBody(true)
+            .build();
 
         Map<String, String> headers = new HashMap<>();
         headers.put("X-Custom-Header", "Hello 世界 🌍");
@@ -275,15 +253,13 @@ class AdditionalHeadersProcessorTest {
 
     @Test
     void shouldMaintainHeaderOrder() {
-        configuration =
-            GenerateHttpSignaturePolicyConfiguration
-                .builder()
-                .algorithm(Algorithm.HMAC_SHA256)
-                .scheme(HttpSignatureScheme.CUSTOM_HEADER)
-                .headers(Arrays.asList("Header-A", "Header-B", "Header-C"))
-                .headersDelimiter("-")
-                .prependHeadersToBody(true)
-                .build();
+        configuration = GenerateHttpSignaturePolicyConfiguration.builder()
+            .algorithm(Algorithm.HMAC_SHA256)
+            .scheme(HttpSignatureScheme.CUSTOM_HEADER)
+            .headers(Arrays.asList("Header-A", "Header-B", "Header-C"))
+            .headersDelimiter("-")
+            .prependHeadersToBody(true)
+            .build();
 
         Map<String, String> headers = new HashMap<>();
         headers.put("Header-A", "A");

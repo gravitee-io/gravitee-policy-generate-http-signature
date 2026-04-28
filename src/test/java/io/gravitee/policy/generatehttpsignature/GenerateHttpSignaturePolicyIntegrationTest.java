@@ -71,15 +71,13 @@ class GenerateHttpSignaturePolicyIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        configuration =
-            GenerateHttpSignaturePolicyConfiguration
-                .builder()
-                .scheme(HttpSignatureScheme.CUSTOM_HEADER)
-                .algorithm(Algorithm.HMAC_SHA256)
-                .keyId("my-key-id")
-                .secret("my-secret-key")
-                .targetSignatureHeader("X-HMAC-Signature")
-                .build();
+        configuration = GenerateHttpSignaturePolicyConfiguration.builder()
+            .scheme(HttpSignatureScheme.CUSTOM_HEADER)
+            .algorithm(Algorithm.HMAC_SHA256)
+            .keyId("my-key-id")
+            .secret("my-secret-key")
+            .targetSignatureHeader("X-HMAC-Signature")
+            .build();
     }
 
     @Test
@@ -111,18 +109,16 @@ class GenerateHttpSignaturePolicyIntegrationTest {
     @Test
     @DisplayName("Should generate correct HMAC signature with timestamp and expiry")
     void shouldGenerateCorrectSignatureWithTimestampAndExpiry() {
-        configuration =
-            GenerateHttpSignaturePolicyConfiguration
-                .builder()
-                .scheme(HttpSignatureScheme.CUSTOM_HEADER)
-                .algorithm(Algorithm.HMAC_SHA256)
-                .keyId("my-key-id")
-                .secret("my-secret-key")
-                .targetSignatureHeader("X-HMAC-Signature")
-                .created(true)
-                .expires(true)
-                .validityDuration(5L)
-                .build();
+        configuration = GenerateHttpSignaturePolicyConfiguration.builder()
+            .scheme(HttpSignatureScheme.CUSTOM_HEADER)
+            .algorithm(Algorithm.HMAC_SHA256)
+            .keyId("my-key-id")
+            .secret("my-secret-key")
+            .targetSignatureHeader("X-HMAC-Signature")
+            .created(true)
+            .expires(true)
+            .validityDuration(5L)
+            .build();
         GenerateHttpSignaturePolicy policy = new GenerateHttpSignaturePolicy(configuration);
 
         String payload = "{\"event\":\"user.created\",\"userId\":123}";
@@ -153,18 +149,16 @@ class GenerateHttpSignaturePolicyIntegrationTest {
     @Test
     @DisplayName("Should generate signature with additional headers prepended to payload")
     void shouldGenerateSignatureWithAdditionalHeaders() {
-        configuration =
-            GenerateHttpSignaturePolicyConfiguration
-                .builder()
-                .scheme(HttpSignatureScheme.CUSTOM_HEADER)
-                .headers(Arrays.asList("X-Request-ID", "X-Timestamp"))
-                .headersDelimiter(".")
-                .prependHeadersToBody(true)
-                .algorithm(Algorithm.HMAC_SHA256)
-                .keyId("my-key-id")
-                .secret("my-secret-key")
-                .targetSignatureHeader("X-HMAC-Signature")
-                .build();
+        configuration = GenerateHttpSignaturePolicyConfiguration.builder()
+            .scheme(HttpSignatureScheme.CUSTOM_HEADER)
+            .headers(Arrays.asList("X-Request-ID", "X-Timestamp"))
+            .headersDelimiter(".")
+            .prependHeadersToBody(true)
+            .algorithm(Algorithm.HMAC_SHA256)
+            .keyId("my-key-id")
+            .secret("my-secret-key")
+            .targetSignatureHeader("X-HMAC-Signature")
+            .build();
 
         GenerateHttpSignaturePolicy policy = new GenerateHttpSignaturePolicy(configuration);
 
@@ -247,8 +241,7 @@ class GenerateHttpSignaturePolicyIntegrationTest {
         ArgumentCaptor<String> signatureCaptor = ArgumentCaptor.forClass(String.class);
 
         // SHA1
-        GenerateHttpSignaturePolicyConfiguration configSHA1 = GenerateHttpSignaturePolicyConfiguration
-            .builder()
+        GenerateHttpSignaturePolicyConfiguration configSHA1 = GenerateHttpSignaturePolicyConfiguration.builder()
             .scheme(HttpSignatureScheme.CUSTOM_HEADER)
             .algorithm(Algorithm.HMAC_SHA1)
             .keyId(keyId)
@@ -266,8 +259,7 @@ class GenerateHttpSignaturePolicyIntegrationTest {
         reset(httpHeaders);
 
         // SHA256
-        GenerateHttpSignaturePolicyConfiguration configSHA256 = GenerateHttpSignaturePolicyConfiguration
-            .builder()
+        GenerateHttpSignaturePolicyConfiguration configSHA256 = GenerateHttpSignaturePolicyConfiguration.builder()
             .scheme(HttpSignatureScheme.CUSTOM_HEADER)
             .algorithm(Algorithm.HMAC_SHA256)
             .keyId(keyId)
@@ -285,8 +277,7 @@ class GenerateHttpSignaturePolicyIntegrationTest {
         reset(httpHeaders);
 
         // SHA512
-        GenerateHttpSignaturePolicyConfiguration configSHA512 = GenerateHttpSignaturePolicyConfiguration
-            .builder()
+        GenerateHttpSignaturePolicyConfiguration configSHA512 = GenerateHttpSignaturePolicyConfiguration.builder()
             .scheme(HttpSignatureScheme.CUSTOM_HEADER)
             .algorithm(Algorithm.HMAC_SHA512)
             .keyId(keyId)
@@ -308,15 +299,13 @@ class GenerateHttpSignaturePolicyIntegrationTest {
     @Test
     @DisplayName("Should use custom header name for signature")
     void shouldUseCustomHeaderName() {
-        configuration =
-            GenerateHttpSignaturePolicyConfiguration
-                .builder()
-                .scheme(HttpSignatureScheme.CUSTOM_HEADER)
-                .algorithm(Algorithm.HMAC_SHA256)
-                .keyId("my-key-id")
-                .secret("my-secret-key")
-                .targetSignatureHeader("X-Custom-Signature-Header")
-                .build();
+        configuration = GenerateHttpSignaturePolicyConfiguration.builder()
+            .scheme(HttpSignatureScheme.CUSTOM_HEADER)
+            .algorithm(Algorithm.HMAC_SHA256)
+            .keyId("my-key-id")
+            .secret("my-secret-key")
+            .targetSignatureHeader("X-Custom-Signature-Header")
+            .build();
         GenerateHttpSignaturePolicy policy = new GenerateHttpSignaturePolicy(configuration);
 
         String payload = "{\"test\":\"data\"}";
@@ -339,15 +328,13 @@ class GenerateHttpSignaturePolicyIntegrationTest {
     @DisplayName("Should resolve secret from secret manager and generate valid signature")
     void shouldResolveSecretFromSecretManagerAndGenerateSignature() {
         // Configure policy to use secret manager expression
-        configuration =
-            GenerateHttpSignaturePolicyConfiguration
-                .builder()
-                .scheme(HttpSignatureScheme.CUSTOM_HEADER)
-                .algorithm(Algorithm.HMAC_SHA256)
-                .keyId("my-key-id")
-                .secret("{#secrets.get('/dev/secret/gravitee/secrets:test')}")
-                .targetSignatureHeader("X-HMAC-Signature")
-                .build();
+        configuration = GenerateHttpSignaturePolicyConfiguration.builder()
+            .scheme(HttpSignatureScheme.CUSTOM_HEADER)
+            .algorithm(Algorithm.HMAC_SHA256)
+            .keyId("my-key-id")
+            .secret("{#secrets.get('/dev/secret/gravitee/secrets:test')}")
+            .targetSignatureHeader("X-HMAC-Signature")
+            .build();
         GenerateHttpSignaturePolicy policy = new GenerateHttpSignaturePolicy(configuration);
 
         String payload = "{\"event\":\"webhook.test\",\"data\":\"example\"}";
@@ -359,8 +346,9 @@ class GenerateHttpSignaturePolicyIntegrationTest {
         when(plainContext.getTemplateEngine()).thenReturn(templateEngine);
 
         // Mock the secret manager resolution
-        when(templateEngine.eval("{#secrets.get('/dev/secret/gravitee/secrets:test')}", String.class))
-            .thenReturn(Maybe.just(actualSecretValue));
+        when(templateEngine.eval("{#secrets.get('/dev/secret/gravitee/secrets:test')}", String.class)).thenReturn(
+            Maybe.just(actualSecretValue)
+        );
 
         ArgumentCaptor<String> signatureCaptor = ArgumentCaptor.forClass(String.class);
 
@@ -392,15 +380,13 @@ class GenerateHttpSignaturePolicyIntegrationTest {
     @Test
     @DisplayName("Should handle EL template expressions in secret")
     void shouldHandleTemplateExpressionInSecret() {
-        configuration =
-            GenerateHttpSignaturePolicyConfiguration
-                .builder()
-                .scheme(HttpSignatureScheme.CUSTOM_HEADER)
-                .algorithm(Algorithm.HMAC_SHA256)
-                .keyId("my-key-id")
-                .secret("{#context.attributes['secret-key']}")
-                .targetSignatureHeader("X-HMAC-Signature")
-                .build();
+        configuration = GenerateHttpSignaturePolicyConfiguration.builder()
+            .scheme(HttpSignatureScheme.CUSTOM_HEADER)
+            .algorithm(Algorithm.HMAC_SHA256)
+            .keyId("my-key-id")
+            .secret("{#context.attributes['secret-key']}")
+            .targetSignatureHeader("X-HMAC-Signature")
+            .build();
         GenerateHttpSignaturePolicy policy = new GenerateHttpSignaturePolicy(configuration);
 
         String payload = "{\"data\":\"test\"}";
@@ -426,15 +412,13 @@ class GenerateHttpSignaturePolicyIntegrationTest {
     @Test
     @DisplayName("Should fail when secret cannot be resolved")
     void shouldFailWhenSecretCannotBeResolved() {
-        configuration =
-            GenerateHttpSignaturePolicyConfiguration
-                .builder()
-                .scheme(HttpSignatureScheme.CUSTOM_HEADER)
-                .algorithm(Algorithm.HMAC_SHA256)
-                .keyId("my-key-id")
-                .secret("{#context.attributes['missing-key']}")
-                .targetSignatureHeader("X-HMAC-Signature")
-                .build();
+        configuration = GenerateHttpSignaturePolicyConfiguration.builder()
+            .scheme(HttpSignatureScheme.CUSTOM_HEADER)
+            .algorithm(Algorithm.HMAC_SHA256)
+            .keyId("my-key-id")
+            .secret("{#context.attributes['missing-key']}")
+            .targetSignatureHeader("X-HMAC-Signature")
+            .build();
         GenerateHttpSignaturePolicy policy = new GenerateHttpSignaturePolicy(configuration);
 
         when(buffer.toString()).thenReturn("payload");
@@ -455,18 +439,16 @@ class GenerateHttpSignaturePolicyIntegrationTest {
     @Test
     @DisplayName("Should fail when required additional header is missing")
     void shouldFailWhenAdditionalHeaderIsMissing() {
-        configuration =
-            GenerateHttpSignaturePolicyConfiguration
-                .builder()
-                .scheme(HttpSignatureScheme.CUSTOM_HEADER)
-                .headers(List.of("X-Required-Header"))
-                .headersDelimiter(":")
-                .prependHeadersToBody(true)
-                .algorithm(Algorithm.HMAC_SHA256)
-                .keyId("my-key-id")
-                .secret("my-secret-key")
-                .targetSignatureHeader("X-HMAC-Signature")
-                .build();
+        configuration = GenerateHttpSignaturePolicyConfiguration.builder()
+            .scheme(HttpSignatureScheme.CUSTOM_HEADER)
+            .headers(List.of("X-Required-Header"))
+            .headersDelimiter(":")
+            .prependHeadersToBody(true)
+            .algorithm(Algorithm.HMAC_SHA256)
+            .keyId("my-key-id")
+            .secret("my-secret-key")
+            .targetSignatureHeader("X-HMAC-Signature")
+            .build();
 
         GenerateHttpSignaturePolicy policy = new GenerateHttpSignaturePolicy(configuration);
 
@@ -518,15 +500,13 @@ class GenerateHttpSignaturePolicyIntegrationTest {
         String payload = "{\"event\":\"user.created\",\"userId\":123}";
         String secret = "shared-secret-key";
         String keyId = "my-key-id";
-        configuration =
-            GenerateHttpSignaturePolicyConfiguration
-                .builder()
-                .scheme(HttpSignatureScheme.CUSTOM_HEADER)
-                .algorithm(Algorithm.HMAC_SHA256)
-                .keyId(keyId)
-                .secret(secret)
-                .targetSignatureHeader("X-HMAC-Signature")
-                .build();
+        configuration = GenerateHttpSignaturePolicyConfiguration.builder()
+            .scheme(HttpSignatureScheme.CUSTOM_HEADER)
+            .algorithm(Algorithm.HMAC_SHA256)
+            .keyId(keyId)
+            .secret(secret)
+            .targetSignatureHeader("X-HMAC-Signature")
+            .build();
         GenerateHttpSignaturePolicy policy = new GenerateHttpSignaturePolicy(configuration);
 
         when(buffer.toString()).thenReturn(payload);
@@ -563,7 +543,9 @@ class GenerateHttpSignaturePolicyIntegrationTest {
 
     private HttpMessageResponse mockMessageResponse() {
         HttpMessageResponse response = mock(HttpMessageResponse.class);
-        doAnswer(invocation -> Completable.complete()).when(response).onMessage(any());
+        doAnswer(invocation -> Completable.complete())
+            .when(response)
+            .onMessage(any());
         return response;
     }
 

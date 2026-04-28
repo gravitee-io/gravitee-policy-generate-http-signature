@@ -92,14 +92,13 @@ public class GenerateHttpSignaturePolicy extends GenerateHttpSignaturePolicyV3 i
                 });
         }
 
-        return handleRequestKeyIdResolution(ctx, configuredHeaders, "")
-            .onErrorResumeNext(th -> {
-                logger.error("Signature generation failed (HTTP request)", th);
-                return interrupt(
-                    ctx,
-                    new ExecutionFailure(500).key(HTTP_SIGNATURE_IMPOSSIBLE_GENERATION).message("Signature generation failed")
-                );
-            });
+        return handleRequestKeyIdResolution(ctx, configuredHeaders, "").onErrorResumeNext(th -> {
+            logger.error("Signature generation failed (HTTP request)", th);
+            return interrupt(
+                ctx,
+                new ExecutionFailure(500).key(HTTP_SIGNATURE_IMPOSSIBLE_GENERATION).message("Signature generation failed")
+            );
+        });
     }
 
     // ==========================
@@ -166,19 +165,18 @@ public class GenerateHttpSignaturePolicy extends GenerateHttpSignaturePolicyV3 i
     }
 
     private Completable handleRequestKeyIdResolution(HttpPlainExecutionContext ctx, List<String> configuredHeaders, String payload) {
-        return resolveKeyId(TemplateEngine.templateEngine())
-            .flatMapCompletable(keyId ->
-                handleSignatureGeneration(
-                    ctx,
-                    configuredHeaders,
-                    keyId,
-                    payload,
-                    ctx.request().timestamp(),
-                    ctx.request().headers()::get,
-                    ctx.request().headers(),
-                    GenerateHttpSignaturePolicy::interrupt
-                )
-            );
+        return resolveKeyId(TemplateEngine.templateEngine()).flatMapCompletable(keyId ->
+            handleSignatureGeneration(
+                ctx,
+                configuredHeaders,
+                keyId,
+                payload,
+                ctx.request().timestamp(),
+                ctx.request().headers()::get,
+                ctx.request().headers(),
+                GenerateHttpSignaturePolicy::interrupt
+            )
+        );
     }
 
     private <T extends HttpBaseExecutionContext> Completable handleMessageSignature(
@@ -207,19 +205,18 @@ public class GenerateHttpSignaturePolicy extends GenerateHttpSignaturePolicyV3 i
         HttpHeaders targetHeaders,
         BiFunction<T, ExecutionFailure, Completable> interrupt
     ) {
-        return resolveKeyId(TemplateEngine.templateEngine())
-            .flatMapCompletable(keyId ->
-                handleSignatureGeneration(
-                    ctx,
-                    configuredHeaders,
-                    keyId,
-                    payload,
-                    ctx.request().timestamp(),
-                    headerGetter,
-                    targetHeaders,
-                    interrupt
-                )
-            );
+        return resolveKeyId(TemplateEngine.templateEngine()).flatMapCompletable(keyId ->
+            handleSignatureGeneration(
+                ctx,
+                configuredHeaders,
+                keyId,
+                payload,
+                ctx.request().timestamp(),
+                headerGetter,
+                targetHeaders,
+                interrupt
+            )
+        );
     }
 
     private <T extends HttpBaseExecutionContext> Completable handleSignatureGeneration(
