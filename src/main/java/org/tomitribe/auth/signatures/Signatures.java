@@ -51,7 +51,7 @@ public enum Signatures {
         final Long signatureCreationTime,
         final Long signatureExpiryTime
     ) {
-        return createSigningString(required, method, uri, headers, signatureCreationTime, signatureExpiryTime, null);
+        return createSigningStringWithPayload(required, method, uri, headers, signatureCreationTime, signatureExpiryTime, null);
     }
 
     /**
@@ -71,7 +71,7 @@ public enum Signatures {
      * @param signatureExpiryTime The signature expiration time in milliseconds since the epoch.
      * @param payload The payload to be included in the signing string. It is not associated with any header name.
      */
-    public static String createSigningString(
+    public static String createSigningStringWithPayload(
         final List<String> required,
         String method,
         final String uri,

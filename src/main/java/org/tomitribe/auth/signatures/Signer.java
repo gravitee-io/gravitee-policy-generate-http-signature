@@ -75,7 +75,26 @@ public class Signer {
      *
      * @return a Signature object containing the signed message.
      */
-    public Signature sign(
+    public Signature sign(final String method, final String uri, final Map<String, String> headers, Long created, Long expires)
+        throws IOException {
+        return signWithPayload(method, uri, headers, created, expires, null);
+    }
+
+    /**
+     * Create and return a HTTP signature object configured with 'created' and 'expires' values.
+     * Useful if you want to recreate a Signature from configuration to validate another one.
+     *
+     * @param method The HTTP method.
+     * @param uri The path and query of the request target of the message.
+     *            The value must already be encoded exactly as it will be sent in the
+     *            request line of the HTTP message. No URL encoding is performed by this method.
+     * @param headers The HTTP headers.
+     * @param created the created timestamp
+     * @param expires the expires timestamp
+     *
+     * @return a Signature object containing the signed message.
+     */
+    public Signature signWithPayload(
         final String method,
         final String uri,
         final Map<String, String> headers,
@@ -83,7 +102,7 @@ public class Signer {
         Long expires,
         String payload
     ) throws IOException {
-        final String signingString = createSigningString(method, uri, headers, created, expires, payload);
+        final String signingString = createSigningStringWithPayload(method, uri, headers, created, expires, payload);
 
         final byte[] binarySignature = sign.sign(signingString.getBytes("UTF-8"));
 
@@ -116,13 +135,29 @@ public class Signer {
      *
      * @return a Signature object containing the signed message.
      */
-    public Signature sign(final String method, final String uri, final Map<String, String> headers, String payload) throws IOException {
+    public Signature sign(final String method, final String uri, final Map<String, String> headers) throws IOException {
+        return signWithPayload(method, uri, headers, null, null, null);
+    }
+
+    /**
+     * Create and return a HTTP signature object.
+     *
+     * @param method The HTTP method.
+     * @param uri The path and query of the request target of the message.
+     *            The value must already be encoded exactly as it will be sent in the
+     *            request line of the HTTP message. No URL encoding is performed by this method.
+     * @param headers The HTTP headers.
+     *
+     * @return a Signature object containing the signed message.
+     */
+    public Signature signWithPayload(final String method, final String uri, final Map<String, String> headers, String payload)
+        throws IOException {
         final long created = System.currentTimeMillis();
         Long expires = signature.getSignatureMaxValidityMilliseconds();
         if (expires != null) {
             expires += created;
         }
-        return sign(method, uri, headers, created, expires, payload);
+        return signWithPayload(method, uri, headers, created, expires, payload);
     }
 
     /**
@@ -162,7 +197,7 @@ public class Signer {
      * @return The signing string.
      * @throws IOException when an exception occurs while creating the signing string.
      */
-    public String createSigningString(
+    public String createSigningStringWithPayload(
         final String method,
         final String uri,
         final Map<String, String> headers,
@@ -170,7 +205,7 @@ public class Signer {
         final Long expires,
         final String payload
     ) throws IOException {
-        return Signatures.createSigningString(signature.getHeaders(), method, uri, headers, created, expires, payload);
+        return Signatures.createSigningStringWithPayload(signature.getHeaders(), method, uri, headers, created, expires, payload);
     }
 
     /**

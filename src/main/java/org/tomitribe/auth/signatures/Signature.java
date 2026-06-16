@@ -137,10 +137,9 @@ public class Signature {
         final String signingAlgorithm,
         final String algorithm,
         final AlgorithmParameterSpec parameterSpec,
-        final List<String> headers,
-        final boolean signHeaders
+        final List<String> headers
     ) {
-        this(keyId, getSigningAlgorithm(signingAlgorithm), getAlgorithm(algorithm), parameterSpec, null, headers, signHeaders);
+        this(keyId, getSigningAlgorithm(signingAlgorithm), getAlgorithm(algorithm), parameterSpec, null, headers);
     }
 
     private static Algorithm getAlgorithm(final String algorithm) {
@@ -154,29 +153,23 @@ public class Signature {
     }
 
     @Deprecated
-    public Signature(final String keyId, final String algorithm, final String signature, boolean signHeaders, final String... headers) {
-        this(keyId, getAlgorithm(algorithm), signature, signHeaders, headers);
+    public Signature(final String keyId, final String algorithm, final String signature, final String... headers) {
+        this(keyId, getAlgorithm(algorithm), signature, headers);
     }
 
     @Deprecated
-    public Signature(final String keyId, final Algorithm algorithm, final String signature, boolean signHeaders, final String... headers) {
-        this(keyId, algorithm, signature, Arrays.asList(headers), signHeaders);
+    public Signature(final String keyId, final Algorithm algorithm, final String signature, final String... headers) {
+        this(keyId, algorithm, signature, Arrays.asList(headers));
     }
 
     @Deprecated
-    public Signature(final String keyId, final String algorithm, final String signature, final List<String> headers, boolean signHeaders) {
-        this(keyId, getAlgorithm(algorithm), signature, headers, signHeaders);
+    public Signature(final String keyId, final String algorithm, final String signature, final List<String> headers) {
+        this(keyId, getAlgorithm(algorithm), signature, headers);
     }
 
     @Deprecated
-    public Signature(
-        final String keyId,
-        final Algorithm algorithm,
-        final String signature,
-        final List<String> headers,
-        boolean signHeaders
-    ) {
-        this(keyId, null, algorithm, null, signature, headers, null, null, null, signHeaders);
+    public Signature(final String keyId, final Algorithm algorithm, final String signature, final List<String> headers) {
+        this(keyId, null, algorithm, null, signature, headers, null, null, null);
     }
 
     public Signature(
@@ -185,10 +178,20 @@ public class Signature {
         final String algorithm,
         final AlgorithmParameterSpec parameterSpec,
         final String signature,
-        final List<String> headers,
-        boolean signHeaders
+        final List<String> headers
     ) {
-        this(keyId, getSigningAlgorithm(signingAlgorithm), getAlgorithm(algorithm), parameterSpec, signature, headers, signHeaders);
+        this(keyId, getSigningAlgorithm(signingAlgorithm), getAlgorithm(algorithm), parameterSpec, signature, headers);
+    }
+
+    public Signature(
+        final String keyId,
+        final SigningAlgorithm signingAlgorithm,
+        final Algorithm algorithm,
+        final AlgorithmParameterSpec parameterSpec,
+        final String signature,
+        final List<String> headers
+    ) {
+        this(keyId, signingAlgorithm, algorithm, parameterSpec, signature, headers, null);
     }
 
     public Signature(
@@ -198,9 +201,9 @@ public class Signature {
         final AlgorithmParameterSpec parameterSpec,
         final String signature,
         final List<String> headers,
-        boolean signHeaders
+        final Long maxSignatureValidityDuration
     ) {
-        this(keyId, signingAlgorithm, algorithm, parameterSpec, signature, headers, null, signHeaders);
+        this(keyId, signingAlgorithm, algorithm, parameterSpec, signature, headers, maxSignatureValidityDuration, null, null);
     }
 
     public Signature(
@@ -211,9 +214,47 @@ public class Signature {
         final String signature,
         final List<String> headers,
         final Long maxSignatureValidityDuration,
-        boolean signHeaders
+        final Long signatureCreatedTime,
+        final Long signatureExpiresTime
     ) {
-        this(keyId, signingAlgorithm, algorithm, parameterSpec, signature, headers, maxSignatureValidityDuration, null, null, signHeaders);
+        this(
+            keyId,
+            signingAlgorithm,
+            algorithm,
+            parameterSpec,
+            signature,
+            headers,
+            maxSignatureValidityDuration,
+            signatureCreatedTime,
+            signatureExpiresTime,
+            false
+        );
+    }
+
+    public Signature(
+        final String keyId,
+        final String signingAlgorithm,
+        final String algorithm,
+        final AlgorithmParameterSpec parameterSpec,
+        final String signature,
+        final List<String> headers,
+        final Long maxSignatureValidityDuration,
+        final Long signatureCreatedTime,
+        final Long signatureExpiresTime,
+        final boolean signHeaders
+    ) {
+        this(
+            keyId,
+            getSigningAlgorithm(signingAlgorithm),
+            getAlgorithm(algorithm),
+            parameterSpec,
+            signature,
+            headers,
+            maxSignatureValidityDuration,
+            signatureCreatedTime,
+            signatureExpiresTime,
+            signHeaders
+        );
     }
 
     public Signature(

@@ -102,7 +102,7 @@ class GenerateHttpSignaturePolicyTest {
         final Signer signer = mock(Signer.class);
 
         doReturn(signer).when(spy).buildSigner(any(), any());
-        when(signer.sign(any(), any(), any(), any())).thenThrow(new IOException("exception-message"));
+        when(signer.sign(any(), any(), any(), any(), any())).thenThrow(new IOException("exception-message"));
 
         final Metrics metrics = Metrics.on(System.currentTimeMillis()).build();
 

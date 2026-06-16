@@ -586,7 +586,7 @@ class GenerateHttpSignaturePolicyIntegrationTest {
             );
             final Key key = new SecretKeySpec(secret.getBytes(), signatureFromConfiguration.getAlgorithm().getJvmName());
             Signer signer = new Signer(key, signatureFromConfiguration);
-            Signature signature = signer.sign("method", "uri", httpHeaders.toSingleValueMap(), payload);
+            Signature signature = signer.signWithPayload("method", "uri", httpHeaders.toSingleValueMap(), payload);
             return signature.toString().substring(10); // Remove the "Signature " part of the signature;
         } catch (Exception e) {
             throw new RuntimeException("Failed to generate expected signature", e);

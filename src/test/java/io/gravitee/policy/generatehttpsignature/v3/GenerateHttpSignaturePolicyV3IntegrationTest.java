@@ -122,7 +122,7 @@ class GenerateHttpSignaturePolicyV3IntegrationTest
                 return request.rxSend();
             })
             .test()
-            .awaitDone(5, SECONDS)
+            .awaitDone(2, SECONDS)
             .assertComplete()
             .assertNoErrors();
 
