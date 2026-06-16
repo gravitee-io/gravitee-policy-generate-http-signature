@@ -1787,6 +1787,13 @@ Strikethrough text indicates that a version is deprecated.
 
 ## Changelog
 
+#### [1.5.1](https://github.com/gravitee-io/gravitee-policy-generate-http-signature/compare/1.5.0...1.5.1) (2026-06-16)
+
+
+##### Bug Fixes
+
+* fixing conflicting method names ([aee3f99](https://github.com/gravitee-io/gravitee-policy-generate-http-signature/commit/aee3f99b5beaac9076eafab704c95018bfe70fec))
+
 ### [1.5.0](https://github.com/gravitee-io/gravitee-policy-generate-http-signature/compare/1.4.0...1.5.0) (2026-04-28)
 
 
