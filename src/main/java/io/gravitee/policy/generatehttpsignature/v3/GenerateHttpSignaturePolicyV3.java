@@ -89,7 +89,13 @@ public class GenerateHttpSignaturePolicyV3 {
         final Signature signature;
 
         try {
-            signature = signer.sign(request.method().name().toLowerCase(), request.path(), requestHeaders.toSingleValueMap(), null);
+            signature = signer.sign(
+                request.method().name().toLowerCase(),
+                request.path(),
+                requestHeaders.toSingleValueMap(),
+                request.timestamp(),
+                request.timestamp() + configuration.validityDuration() * 1000L
+            );
         } catch (IOException e) {
             final String errorMessage = String.format("%s %s", ERROR_MESSAGE, e.getMessage());
             logger.warn(errorMessage);

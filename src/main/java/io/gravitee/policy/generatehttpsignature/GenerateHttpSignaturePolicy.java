@@ -291,7 +291,7 @@ public class GenerateHttpSignaturePolicy extends GenerateHttpSignaturePolicyV3 i
         );
         Signer signer = super.buildSigner(signatureFromConfiguration, () -> secret);
         logger.debug("Method and URI: {} {}", method, uri);
-        Signature signature = signer.sign(method, uri, headers.toSingleValueMap(), payload);
+        Signature signature = signer.signWithPayload(method, uri, headers.toSingleValueMap(), payload);
         setSignatureHeader(headers, configuration.targetSignatureHeader(), signature);
     }
 
