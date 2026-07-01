@@ -34,7 +34,7 @@
     </parent>
 
     <properties>
-        <gravitee-apim-bom.version>4.6.10</gravitee-apim-bom.version>
+        <gravitee-apim-bom.version>4.12.2</gravitee-apim-bom.version>
         <tomitribe-http-signatures.version>1.8-SNAPSHOT</tomitribe-http-signatures.version>
 
         <properties-maven-plugin.version>1.3.0</properties-maven-plugin.version>
