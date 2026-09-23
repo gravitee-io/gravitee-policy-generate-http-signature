@@ -1628,9 +1628,11 @@ The `generate-http-signature` policy can be applied to the following API types a
 ## Compatibility matrix
 Strikethrough text indicates that a version is deprecated.
 
-| Plugin version| APIM |
-| --- | ---  |
-|1.0.x|4.7.x and above |
+| Plugin version| APIM| Java version |
+| --- | --- | ---  |
+|2.x|4.9.x to latest|21 |
+|1.4.x to 1.5.x|4.6.x to latest|17 |
+|1.0.x to 1.3.x|3.18.x to 4.5.x|11 |
 
 
 ## Configuration options
