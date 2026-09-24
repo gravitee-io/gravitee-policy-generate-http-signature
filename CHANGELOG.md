@@ -1,3 +1,21 @@
+# [2.0.0](https://github.com/gravitee-io/gravitee-policy-generate-http-signature/compare/1.5.1...2.0.0) (2026-09-24)
+
+
+### Bug Fixes
+
+* stop prepending a line to the signing string when there is no payload ([041295d](https://github.com/gravitee-io/gravitee-policy-generate-http-signature/commit/041295d0d9bca2de1013aff04a759e7edeb9827c))
+
+
+* chore(deps)!: move to the gravitee orb 5 and parent 23 ([72d0a0d](https://github.com/gravitee-io/gravitee-policy-generate-http-signature/commit/72d0a0df4b881ad04914d6757f9fcf857a4988ab))
+
+
+### BREAKING CHANGES
+
+* the artifact is now compiled for Java 21, up from Java 17, and
+requires a Java 21 runtime or later.
+
+https://gravitee.atlassian.net/browse/BX-403
+
 ## [1.5.1](https://github.com/gravitee-io/gravitee-policy-generate-http-signature/compare/1.5.0...1.5.1) (2026-06-16)
 
 
