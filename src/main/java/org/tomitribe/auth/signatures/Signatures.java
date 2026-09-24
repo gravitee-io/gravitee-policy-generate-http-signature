@@ -70,6 +70,7 @@ public enum Signatures {
      * @param signatureCreationTime The signature creation time in milliseconds since the epoch.
      * @param signatureExpiryTime The signature expiration time in milliseconds since the epoch.
      * @param payload The payload to be included in the signing string. It is not associated with any header name.
+     *                A null payload contributes no line at all; an empty one contributes an empty line.
      */
     public static String createSigningStringWithPayload(
         final List<String> required,
@@ -83,7 +84,9 @@ public enum Signatures {
         headers = lowercase(headers);
 
         final List<String> list = new ArrayList<>(payload != null ? required.size() + 1 : required.size());
-        list.add(payload);
+        if (payload != null) {
+            list.add(payload);
+        }
 
         for (final String key : required) {
             if ("(request-target)".equals(key)) {

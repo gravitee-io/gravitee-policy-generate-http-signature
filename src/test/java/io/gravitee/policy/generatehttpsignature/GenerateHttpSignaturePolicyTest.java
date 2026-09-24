@@ -621,4 +621,92 @@ class GenerateHttpSignaturePolicyTest {
             .onMessage(any());
         return response;
     }
+
+    /**
+     * APIM-15087: with payload signing off, the signing string must hold the signed headers and nothing
+     * else. This pins the resulting signature, so the canonical form cannot drift unnoticed again.
+     */
+    @Test
+    void shouldSignHeadersOnlyWhenPayloadSigningIsOff() {
+        configuration = configurationWithSignedHeader(false);
+        GenerateHttpSignaturePolicy policy = new GenerateHttpSignaturePolicy(configuration);
+
+        HttpPlainRequest request = mock(HttpPlainRequest.class);
+        doReturn(request).when(plainContext).request();
+        doReturn(httpHeaders).when(request).headers();
+        doReturn(Map.of("x-api-key", "abcd")).when(httpHeaders).toSingleValueMap();
+        when(plainContext.getTemplateEngine()).thenReturn(templateEngine);
+        when(templateEngine.eval("test-secret", String.class)).thenReturn(Maybe.just("test-secret"));
+
+        policy.onRequest(plainContext).test().assertComplete();
+
+        // HMAC-SHA256 of "x-api-key: abcd" with "test-secret"
+        assertThat(capturedSignature()).contains("signature=\"HnNcVsx9dCsBMZvlMPFmVxTu7mQdSVS9jfMtwM/XZmI=\"");
+    }
+
+    @Test
+    void shouldStillSignAnEmptyMessageAsAnEmptyPayload() {
+        // the message path never consults signPayload, and an empty message does reach the signer as ""
+        configuration = configurationWithSignedHeader(false);
+        GenerateHttpSignaturePolicy policy = new GenerateHttpSignaturePolicy(configuration);
+
+        when(message.content()).thenReturn(Buffer.buffer(""));
+        when(message.headers()).thenReturn(httpHeaders);
+        doReturn(Map.of("x-api-key", "abcd")).when(httpHeaders).toSingleValueMap();
+
+        HttpMessageResponse response = mockMessageResponse();
+        when(messageContext.response()).thenReturn(response);
+        when(messageContext.getTemplateEngine()).thenReturn(templateEngine);
+        when(templateEngine.eval("test-secret", String.class)).thenReturn(Maybe.just("test-secret"));
+
+        ArgumentCaptor<Function<Message, Maybe<Message>>> onMessageCaptor = ArgumentCaptor.forClass(Function.class);
+        policy.onMessageResponse(messageContext).test().assertComplete();
+        verify(response).onMessage(onMessageCaptor.capture());
+        onMessageCaptor.getValue().apply(message).test().assertComplete();
+
+        // HMAC-SHA256 of "\nx-api-key: abcd" with "test-secret" - the empty payload keeps its line
+        assertThat(capturedSignature()).contains("signature=\"KBOlKZwET1DBmLtTIOq3jyqgI6BozLrOqMR9lNnr9Z0=\"");
+    }
+
+    @Test
+    void shouldNotPrependHeadersWhenThereIsNoPayloadToPrependThemTo() {
+        configuration = configurationWithSignedHeader(true);
+        GenerateHttpSignaturePolicy policy = new GenerateHttpSignaturePolicy(configuration);
+
+        HttpPlainRequest request = mock(HttpPlainRequest.class);
+        doReturn(request).when(plainContext).request();
+        doReturn(httpHeaders).when(request).headers();
+        doReturn(Map.of("x-api-key", "abcd")).when(httpHeaders).toSingleValueMap();
+        // lenient: the fixed code never reads the header back, but without this the old code throws
+        // before it signs, and the test would pass for the wrong reason. Stubbed, the old code signs
+        // "abcd:\nx-api-key: abcd" instead, so the assertion below pins the actual difference.
+        lenient().when(httpHeaders.get("x-api-key")).thenReturn("abcd");
+        when(plainContext.getTemplateEngine()).thenReturn(templateEngine);
+        when(templateEngine.eval("test-secret", String.class)).thenReturn(Maybe.just("test-secret"));
+
+        policy.onRequest(plainContext).test().assertComplete();
+
+        // unchanged by prependHeadersToBody: HMAC-SHA256 of "x-api-key: abcd"
+        assertThat(capturedSignature()).contains("signature=\"HnNcVsx9dCsBMZvlMPFmVxTu7mQdSVS9jfMtwM/XZmI=\"");
+    }
+
+    private GenerateHttpSignaturePolicyConfiguration configurationWithSignedHeader(boolean prependHeadersToBody) {
+        return GenerateHttpSignaturePolicyConfiguration.builder()
+            .scheme(HttpSignatureScheme.CUSTOM_HEADER)
+            .algorithm(Algorithm.HMAC_SHA256)
+            .keyId("test-key")
+            .secret("test-secret")
+            .targetSignatureHeader("X-HMAC-Signature")
+            .headers(List.of("x-api-key"))
+            .signPayload(false)
+            .prependHeadersToBody(prependHeadersToBody)
+            .headersDelimiter(":")
+            .build();
+    }
+
+    private String capturedSignature() {
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(httpHeaders).set(eq("X-HMAC-Signature"), captor.capture());
+        return captor.getValue();
+    }
 }
