@@ -92,7 +92,7 @@ public class GenerateHttpSignaturePolicy extends GenerateHttpSignaturePolicyV3 i
                 });
         }
 
-        return handleRequestKeyIdResolution(ctx, configuredHeaders, "").onErrorResumeNext(th -> {
+        return handleRequestKeyIdResolution(ctx, configuredHeaders, null).onErrorResumeNext(th -> {
             logger.error("Signature generation failed (HTTP request)", th);
             return interrupt(
                 ctx,
@@ -326,7 +326,7 @@ public class GenerateHttpSignaturePolicy extends GenerateHttpSignaturePolicyV3 i
     }
 
     private String processAdditionalHeaders(String payload, Function<String, String> headerGetter) {
-        if (!configuration.prependHeadersToBody()) {
+        if (payload == null || !configuration.prependHeadersToBody()) {
             return payload;
         }
         return headersProcessor.processHeaders(payload, headerGetter);
